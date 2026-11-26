@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#08121C">
+<title>¿Dónde cabes? · Alquiler mediano y tu sueldo en los municipios de Madrid</title>
+<style>
+  :root {
+    --bg:#08121C; --raise:#10202E; --line:#26324A; --ink:#F2F5FA; --ink2:#B7C2D3;
+    --water:#FFCF4A; --dry:#6E5F4B; --idle:#6F7B96; --edge:#5B6680; --press:#2A3650; --hatch:#5B6680; --coral:#FF8A65;
+    --fs:clamp(17px,1.25vw,24px); --fs-s:clamp(15px,1.05vw,20px);
+    --ease:cubic-bezier(.22,1,.36,1);
+    --cond:"Avenir Next Condensed","Arial Narrow","Roboto Condensed",sans-serif;
+  }
+  * { box-sizing:border-box; margin:0; }
+  html { background:var(--bg); color:var(--ink); font:500 var(--fs)/1.35 "Avenir Next","Segoe UI",system-ui,sans-serif; }
+  body { height:100vh; overflow:hidden; display:grid; grid-template-columns:clamp(420px,33.4vw,640px) 1fr; }
+  aside { height:100vh; overflow-y:auto; display:flex; flex-direction:column; }
+  .head { padding:clamp(22px,2.4vw,48px) clamp(22px,2.4vw,48px) 0; }
+  .ctrl { padding:clamp(14px,1.4vw,28px) clamp(22px,2.4vw,48px); display:flex; flex-direction:column; gap:clamp(12px,1.2vw,22px); }
+  .foot { margin-top:auto; padding:0 clamp(22px,2.4vw,48px) clamp(18px,1.8vw,36px); color:var(--ink2); font-size:var(--fs-s); }
+  main { position:relative; height:100vh; min-height:0; border-left:1px solid var(--line); display:grid; grid-template-rows:auto minmax(0,1fr) auto; }
+  .kicker { color:var(--ink2); font-size:var(--fs-s); letter-spacing:.02em; }
+  h1 { font:700 clamp(40px,3.4vw,66px)/.95 var(--cond); letter-spacing:-.01em; margin:.15em 0 .35em; }
+  #result { min-height:clamp(200px,16vw,300px); }
+  .big { display:flex; flex-direction:column; gap:.12em; font:700 clamp(110px,9.4vw,180px)/.82 var(--cond); font-variant-numeric:tabular-nums; color:var(--water); }
+  .big.zero { color:var(--coral); }
+  .big.none { font-size:0; gap:0; }
+  .big.none span { font:700 clamp(40px,3.4vw,64px)/1 var(--cond); max-width:10em; }
+  .big span { font:600 var(--fs)/1.25 "Avenir Next","Segoe UI",system-ui,sans-serif; color:var(--ink); max-width:20em; }
+  .lead { margin-top:.6em; max-width:26em; }
+  .lead b { color:var(--ink); font-weight:700; }
+  .lead .cap { font:700 1.75em/1 var(--cond); font-variant-numeric:tabular-nums; }
+  .lead, .muted { color:var(--ink2); }
+  .warn { color:var(--coral); }
+  label, legend { display:block; font-weight:600; margin-bottom:.35em; }
+  fieldset { border:0; padding:0; }
+  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  button, input, a.out { font:inherit; color:inherit; }
+  .seg button, .ref, a.out, .close { min-height:48px; padding:.35em .8em; border-radius:6px; border:1px solid var(--edge); background:var(--raise); color:var(--ink); cursor:pointer; }
+  .seg button[aria-pressed="true"], .ref[aria-pressed="true"] { background:var(--press); border:2px solid var(--ink); font-weight:700; }
+  input[type=text] { width:8.5em; min-height:48px; padding:.3em .55em; background:var(--raise); border:1px solid var(--edge); border-radius:6px; font-variant-numeric:tabular-nums; }
+  input[aria-invalid="true"] { border-color:var(--coral); }
+  input[type=range] { flex:1; min-width:160px; accent-color:var(--ink); height:32px; }
+  .pct { font:700 calc(var(--fs) * 1.4) var(--cond); min-width:3.2em; font-variant-numeric:tabular-nums; }
+  .seg button:hover, .ref:hover, a.out:hover, .close:hover, #list button:hover { border-color:var(--ink2); background:#1A2438; }
+  .seg button[aria-pressed="true"]:hover, .ref[aria-pressed="true"]:hover { background:#34425F; }
+  button, a.out { touch-action:manipulation; }
+  :focus-visible { outline:3px solid var(--ink); outline-offset:3px; }
+  .note { font-size:var(--fs-s); color:var(--ink2); max-width:32em; }
+  #card { scroll-margin-top:clamp(16px,1.6vw,32px); }
+  .nw { white-space:nowrap; }
+  #card h2 { font:700 clamp(44px,3.6vw,72px)/.95 var(--cond); margin-bottom:.25em; }
+  #card dl { display:grid; gap:.55em; }
+  #card dt { font-size:var(--fs-s); color:var(--ink2); }
+  #card dd { margin:0; }
+  #card dd b { font-size:1.2em; }
+  #card .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:.9em; }
+  a.out { display:inline-flex; align-items:center; text-decoration:none; border-color:var(--ink2); }
+  .srcs { margin-top:.7em; font-size:var(--fs-s); color:var(--ink2); }
+  .srcs a, .foot a { color:var(--ink2); }
+  .mapwrap { position:relative; min-height:0; }
+  #map { width:100%; height:100%; display:block; min-height:0; overflow:hidden; touch-action:none; cursor:grab; }
+  #map.dragging { cursor:grabbing; }
+  #tiles { filter:grayscale(1) invert(1) brightness(.78) contrast(1.15); }
+  #map.streets .m { fill-opacity:.62; }
+  #map.streets .m.sel { fill-opacity:.3; }
+  .basenote { position:absolute; left:clamp(10px,1vw,18px); bottom:10px; background:rgb(5 8 15 / .85); padding:.2em .55em; border-radius:4px; font-size:var(--fs-s); color:var(--ink2); max-width:70%; }
+  .zoom { position:absolute; right:clamp(10px,1vw,18px); bottom:10px; display:flex; gap:6px; }
+  .zoom button { width:52px; height:52px; border-radius:6px; border:1px solid var(--edge); background:var(--raise); font:700 28px/1 system-ui,sans-serif; cursor:pointer; }
+  .zoom .wide { width:auto; padding:0 .9em; font:700 var(--fs) "Avenir Next","Segoe UI",system-ui,sans-serif; }
+  .zoom .wide[aria-pressed="true"] { border:2px solid var(--ink); background:var(--press); }
+  .zoom button:hover { border-color:var(--ink2); background:#1A2438; }
+  .m { vector-effect:non-scaling-stroke; stroke:var(--bg); stroke-width:1; stroke-linejoin:round; fill:var(--idle); cursor:pointer; transition:fill .6s var(--ease); }
+  .m.nodata, .m.void { fill:url(#hatch); }
+  .m.void { cursor:default; pointer-events:none; }
+  .m.wet { fill:var(--water); }
+  .m.dry { fill:var(--dry); }
+  .m.det { fill:url(#detIdle); } .m.det.wet { fill:url(#detWet); } .m.det.dry { fill:url(#detDry); }
+  .m:hover, .m.sel { stroke:var(--ink); stroke-width:3; }
+  .lbl { font-weight:700; font-family:var(--cond); fill:var(--ink); paint-order:stroke; stroke:var(--bg); stroke-linejoin:round; pointer-events:none; text-anchor:middle; }
+  .lbl.dark { fill:#06201D; stroke:none; }
+  .legend { display:flex; flex-wrap:wrap; gap:.4em 1.6em; padding:clamp(12px,1vw,20px) clamp(18px,1.8vw,36px); border-top:1px solid var(--line); }
+  .legend span { display:inline-flex; gap:.45em; align-items:center; }
+  .legend i { width:1.1em; height:1.1em; border-radius:3px; flex:none; }
+  .sw-water { background:var(--water); } .sw-dry { background:var(--dry); } .sw-idle { background:var(--idle); }
+  .sw-det { background:radial-gradient(circle,var(--bg) 0 1.7px,transparent 2.2px) 0 0/7px 7px,var(--idle); }
+  .sw-hatch { background:repeating-linear-gradient(45deg,var(--hatch) 0 2px,var(--raise) 2px 6px); }
+  .maptitle { order:-1; padding:clamp(14px,1.4vw,28px) clamp(18px,1.8vw,36px) 0; color:var(--ink2); }
+  .rentnote { flex-basis:100%; color:var(--ink2); font-size:var(--fs-s); }
+  .maptitle b { color:var(--ink); font:700 calc(var(--fs) * 1.25) var(--cond); display:block; }
+  #tour { order:-1; padding:clamp(14px,1.4vw,28px) clamp(18px,1.8vw,36px) 0; display:grid; gap:.5em; }
+  #tour .tag { color:var(--ink2); font-size:var(--fs-s); }
+  #tour .say { font:600 calc(var(--fs) * 1.35)/1.25 "Avenir Next","Segoe UI",system-ui,sans-serif; max-width:34em; }
+  #tour .say b { color:var(--water); }
+  #tour .nav { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  #tour .nav button, #startTour { min-height:48px; padding:.35em .8em; border-radius:6px; border:1px solid var(--edge); background:var(--raise); cursor:pointer; }
+  #tour .nav button:disabled { opacity:.45; cursor:default; }
+  #tour .steps button[aria-current="step"] { border:2px solid var(--ink); background:var(--press); font-weight:700; }
+  #tour .steps { display:flex; gap:6px; flex-wrap:wrap; }
+  #startTour { align-self:flex-start; font-weight:600; }
+  #tip { position:absolute; pointer-events:none; background:#05080F; border:1px solid var(--line); border-radius:6px; padding:.45em .7em; font-size:var(--fs-s); opacity:0; transition:opacity .15s; max-width:22em; }
+  details summary { cursor:pointer; font-weight:600; min-height:44px; display:flex; align-items:center; }
+  #list { font-variant-numeric:tabular-nums; list-style:none; padding:0; margin-top:.4em; max-height:40vh; overflow:auto; font-size:var(--fs-s); }
+  #list button { width:100%; display:flex; justify-content:space-between; gap:1em; background:none; border:0; border-bottom:1px solid var(--line); padding:.45em .2em; cursor:pointer; text-align:left; min-height:44px; }
+  #list .yes { color:var(--water); }
+  #error { padding:clamp(24px,4vw,96px); max-width:40em; grid-column:1 / -1; }
+  [hidden] { display:none !important; }
+  #salaryErr { margin-bottom:.35em; }
+  #findMsg { margin-top:.35em; font-size:var(--fs-s); }
+  #salaryErr:empty, #findMsg:empty { display:none; }
+  .layers { display:grid; grid-template-columns:repeat(auto-fill,minmax(11.5em,1fr)); gap:8px; margin:.5em 0 .8em; }
+  .layers button { display:flex; align-items:center; gap:.5em; min-height:48px; padding:.3em .6em; border:1px solid var(--edge); border-radius:6px; background:var(--raise); text-align:left; font-size:var(--fs-s); cursor:pointer; }
+  .layers button[aria-pressed="true"] { border:2px solid var(--ink); background:var(--press); }
+  .layers button:disabled { cursor:default; color:var(--ink2); border-style:dashed; }
+  .layers .n { margin-left:auto; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .layers button:disabled .n { font-weight:500; }
+  .glyph { width:1.15em; height:1.15em; flex:none; overflow:visible; }
+  #plist { max-height:44vh; overflow:auto; border-top:1px solid var(--line); font-size:var(--fs-s); }
+  #plist h3 { font-size:var(--fs-s); margin:.8em 0 .2em; display:flex; gap:.45em; align-items:center; }
+  #plist h3 + .note { margin-bottom:.3em; }
+  #plist ul { list-style:none; padding:0; }
+  #plist button { width:100%; display:block; text-align:left; background:none; border:0; border-bottom:1px solid var(--line); padding:.45em .3em; min-height:48px; cursor:pointer; }
+  #plist button:hover { background:#1A2438; }
+  #plist button[aria-current="true"] { background:var(--press); box-shadow:inset 4px 0 0 var(--ink); }
+  #plist small { display:block; color:var(--ink2); font-size:1em; }
+  #dots path { stroke:var(--bg); cursor:pointer; vector-effect:non-scaling-stroke; stroke-width:2.5px; }
+  #dots path.on { stroke:var(--ink); }
+  #dots .ring { fill:none; stroke:var(--ink); stroke-width:3px; vector-effect:non-scaling-stroke; pointer-events:none; }
+  #place { position:absolute; top:clamp(14px,1.4vw,28px); right:clamp(14px,1.4vw,28px); max-width:min(26em,60%); background:#05080F; border:1px solid var(--edge); border-radius:8px; padding:.8em 1em; display:grid; gap:.2em; box-shadow:0 8px 24px rgb(0 0 0 / .45); }
+  #place .kind { display:flex; gap:.45em; align-items:center; color:var(--ink2); font-size:var(--fs-s); }
+  #place b { font:700 calc(var(--fs) * 1.3)/1.05 var(--cond); }
+  #place .close { justify-self:start; margin-top:.4em; min-height:44px; }
+  details.more { margin-top:1em; }
+  body.onhome { display:block; height:auto; overflow:visible; }
+  body.onhome > aside, body.onhome > main, body:not(.onhome) > #story { display:none; }
+  #home { position:relative; height:100vh; height:100svh; background:var(--bg); overflow:hidden; transition:opacity .45s var(--ease), transform .45s var(--ease); }
+  #home.leaving, #story.leaving { opacity:0; transform:scale(1.04); pointer-events:none; transition:opacity .45s var(--ease), transform .45s var(--ease); }
+  #home.asking { position:fixed; inset:0; z-index:1000; height:auto; background:var(--bg); }
+  body.asking > #story { visibility:hidden; }
+  #home.asking .hl, #home.asking .htip { display:none; }
+  #ridge { position:absolute; inset:0; width:100%; height:100%; display:block; cursor:crosshair; }
+  .hl { position:relative; z-index:1; width:min(40vw,720px); height:100%; padding:clamp(22px,3.4vh,44px) 0 clamp(18px,3vh,36px) clamp(22px,3.6vw,72px); display:flex; flex-direction:column; justify-content:center; gap:clamp(10px,1.6vh,20px); pointer-events:none; }
+  .hl > * { pointer-events:auto; }
+  .htitle { font:800 clamp(52px,7.4vw,140px)/.84 var(--cond); text-transform:uppercase; letter-spacing:-.02em; margin:.25em 0 0; pointer-events:none; }
+  .hbig { margin-top:clamp(12px,3vh,40px); pointer-events:none; }
+  .hbig b { display:block; font:800 clamp(90px,11vw,200px)/.8 var(--cond); color:var(--water); font-variant-numeric:tabular-nums; }
+  .hbig span { display:block; margin-top:.45em; max-width:22em; font-size:var(--fs); }
+  .hctl { display:grid; gap:10px 14px; grid-template-columns:auto 1fr; align-items:center; font-size:var(--fs-s); }
+  .hctl label { margin:0; font-weight:600; }
+  .hctl .full { grid-column:1 / -1; }
+  .hctl input[type=checkbox] { width:26px; height:26px; accent-color:var(--water); vertical-align:middle; margin-right:.4em; }
+  .hctl label.full { display:flex; align-items:center; min-height:44px; }
+  .hctl input[type=text] { width:100%; }
+  #hSteps { display:flex; flex-wrap:wrap; gap:6px; }
+  #hSteps button, .htip button { min-height:48px; padding:.3em .8em; border-radius:6px; border:1px solid var(--edge); background:var(--raise); cursor:pointer; font-size:var(--fs-s); }
+  #hSteps button[aria-pressed="true"] { border:2px solid var(--water); background:var(--press); font-weight:700; }
+  #youBack { min-height:48px; padding:.3em .8em; border-radius:6px; border:1px solid var(--edge); background:var(--raise); cursor:pointer; font-size:var(--fs-s); }
+  .cta { justify-self:start; min-height:56px; padding:.35em 1.1em; border-radius:6px; border:0; background:var(--water); color:#08121C; font:700 var(--fs) "Avenir Next","Segoe UI",system-ui,sans-serif; cursor:pointer; }
+  .cta:hover { background:#FFE08A; }
+  #youView { position:absolute; inset:0; z-index:3; overflow-y:auto; padding:clamp(18px,5vh,64px) clamp(16px,3vw,64px) 24px; }
+  .ask { pointer-events:auto; max-width:min(64em,100%); margin:0 auto; display:flex; flex-direction:column; align-items:center; text-align:center; gap:clamp(10px,1.8vh,22px); }
+  .ask .q { display:flex; flex-direction:column; align-items:center; gap:clamp(10px,1.6vh,20px); width:100%; }
+  .askStep { color:var(--ink2); font-size:var(--fs-s); letter-spacing:.04em; }
+  .askQ { font:800 clamp(36px,4.4vw,88px)/.95 var(--cond); margin:0; text-wrap:balance; }
+  #hSalary { width:7.5em; font:700 clamp(36px,3.4vw,68px)/1 var(--cond); text-align:center; padding:.15em .3em; border:2px solid var(--ink2); background:rgb(16 32 46 / .92); border-radius:8px; }
+  #hSalary::placeholder { color:#7D8AA3; font:italic 500 clamp(20px,1.5vw,30px)/1 "Avenir Next","Segoe UI",system-ui,sans-serif; }
+  .askRange { display:flex; align-items:center; gap:.6em; width:min(36em,100%); }
+  .askRange input { flex:1; height:44px; accent-color:var(--water); }
+  .askRange output { font:800 clamp(44px,4vw,80px)/1 var(--cond); min-width:2.6em; font-variant-numeric:tabular-nums; color:var(--water); }
+  .askEarn { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+  .askEarn button { min-height:64px; padding:.3em 1.2em; font-size:calc(var(--fs) * 1.2); border-radius:8px; border:1px solid var(--edge); background:var(--raise); cursor:pointer; }
+  .askEarn button[aria-pressed="true"] { border:2px solid var(--water); background:var(--press); font-weight:700; }
+  .askNav { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .askNav button { min-height:52px; padding:.3em 1em; border-radius:6px; border:1px solid var(--edge); background:var(--raise); cursor:pointer; font-size:var(--fs-s); }
+  .askNav .cta { font-size:var(--fs); border:0; background:var(--water); }
+  .askBig { font-size:var(--fs); max-width:34em; text-wrap:pretty; }
+  .askBig b.n { display:block; font:800 clamp(110px,11vw,210px)/.82 var(--cond); color:var(--water); font-variant-numeric:tabular-nums; }
+  .askBig b.n.zero { color:var(--coral); }
+  .askBig .cap { color:var(--ink); font-weight:700; }
+  .askFind { display:flex; gap:.6em; align-items:center; flex-wrap:wrap; justify-content:center; font-size:var(--fs-s); }
+  .askFind label { margin:0; }
+  .askFind input { width:12em; }
+  #hSalaryErr:empty, #hFindMsg:empty { display:none; }
+  .htip { position:absolute; z-index:2; pointer-events:none; background:#030A12; border:1px solid var(--edge); border-radius:6px; padding:.45em .75em; font-size:var(--fs-s); max-width:22em; }
+  .htip b { font:700 calc(var(--fs) * 1.15) var(--cond); display:block; }
+  .htip button { pointer-events:auto; margin-top:.4em; }
+  .hnote { position:absolute; right:clamp(14px,1.6vw,32px); bottom:clamp(10px,1.4vh,24px); max-width:44em; text-align:right; font-size:var(--fs-s); color:var(--ink2); z-index:1; }
+  .hnote i { display:inline-block; width:1.6em; height:3px; vertical-align:middle; margin:0 .3em; }
+  @media (max-width:820px), (max-height:640px) {
+    #home { height:auto; min-height:100svh; display:flex; flex-direction:column; }
+    #home.asking { display:block; }
+    #home.asking #ridge { position:absolute; inset:0; height:100%; min-height:0; }
+    #home.asking .hnote { display:none; }
+    #ridge { position:relative; height:48vh; min-height:260px; flex:none; order:2; }
+    .hl { display:contents; }
+    .hl > * { margin-left:18px; margin-right:18px; }
+    .hl > .kicker { margin-top:18px; }
+    .hctl { order:3; margin-bottom:18px; }
+    .hnote { order:4; }
+    .hbig { margin-top:0; }
+    .hnote { position:static; text-align:left; padding:0 18px 18px; }
+  }
+  @media (prefers-reduced-motion:reduce) { #home, #story.leaving { transition:none; } }
+  @media (max-width:820px), (max-height:640px) {
+    body { height:auto; overflow:visible; grid-template-columns:1fr; }
+    aside { display:contents; }
+    .head { order:1; } main { order:2; } .ctrl { order:3; } .foot { order:4; }
+    main { border-left:0; border-top:1px solid var(--line); height:auto; }
+    #map { height:62vh; min-height:340px; touch-action:pan-y; }
+    #result { min-height:0; }
+    #place { position:fixed; top:auto; bottom:0; left:0; right:0; max-width:none; border-radius:8px 8px 0 0; z-index:2; }
+    #plist { max-height:60vh; }
+  }
+  @media (max-height:640px) {
+    #tour { gap:.3em; padding-top:10px; }
+    #tour .say { font-size:var(--fs); }
+    #tour .nav button { min-height:40px; padding:.2em .6em; }
+    #map { height:calc(100vh - 190px); min-height:180px; }
+  }
+  @media (max-height:440px) and (min-width:560px) {
+    main { grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:auto auto; align-items:start; }
+    #tour, .maptitle { grid-row:1; grid-column:1; }
+    .mapwrap { grid-row:1; grid-column:2; }
+    #map { height:calc(100vh - 16px); min-height:0; }
+    .legend { grid-column:1 / -1; }
+  }
+  @media (prefers-reduced-motion:reduce) { .m, #tip { transition:none !important; } }
+</style>
+<style>/*__STORY_CSS__*/</style>
+</head>
+<body>
+<section id="home" hidden aria-label="Inicio: el relieve de la Comunidad de Madrid">
+  <div class="hl">
+    <p class="kicker">DataMad 2026 · Comunidad de Madrid</p>
+    <h1 class="htitle">¿Dónde<br>cabes?</h1>
+    <p class="hbig" aria-live="polite"><b id="hN">0</b><span id="hSay"></span></p>
+    <div class="hctl">
+      <div class="full" id="hSteps" role="group" aria-label="La persona media de 26 a 35 años"><button type="button" data-i="0">Persona media, 30&nbsp;%</button><button type="button" data-i="1">Al 40&nbsp;%</button><button type="button" data-i="2">Con dos sueldos</button></div>
+      <label for="hShare">Para el alquiler: <span id="hShareOut">30 %</span></label><input type="range" id="hShare" min="10" max="60" step="1" value="30">
+      <button type="button" class="full cta" id="youBtn">¿Y tú? Calcula dónde cabes</button>
+    </div>
+  </div>
+  <section id="youView" hidden role="dialog" aria-modal="true" aria-label="¿Y tú? Tres preguntas sobre tu dinero">
+    <div class="ask">
+      <p class="askStep" id="youStep" aria-live="polite"></p>
+      <div class="q" data-q="0">
+        <label for="hSalary" class="askQ">¿Cuánto cobras al año, en bruto?</label>
+        <input type="text" id="hSalary" inputmode="numeric" enterkeyhint="next" autocomplete="off" spellcheck="false" placeholder="Por ejemplo, 24.000" aria-describedby="hSalaryErr hSalaryHelp">
+        <p class="warn" id="hSalaryErr" role="status"></p>
+        <p class="note" id="hSalaryHelp">En euros, sin decimales. Tu sueldo no sale de esta página ni se guarda en la dirección.</p>
+      </div>
+      <div class="q" data-q="1" hidden>
+        <label for="hShare2" class="askQ">¿Qué parte del sueldo darías al alquiler?</label>
+        <div class="askRange"><input type="range" id="hShare2" min="10" max="60" step="1" value="30"><output id="hShareOut2" for="hShare2">30 %</output></div>
+      </div>
+      <fieldset class="q" data-q="2" hidden>
+        <legend class="askQ">¿Cuántos sueldos entran en casa?</legend>
+        <div class="seg askEarn" id="hEarn"><button type="button" data-v="1" aria-pressed="true">Uno, el mío</button><button type="button" data-v="2" aria-pressed="false">Dos iguales</button></div>
+      </fieldset>
+      <div class="q askOut" data-q="3" hidden>
+        <p class="askBig" id="youRes"></p>
+        <div class="askFind"><label for="hFind">Busca un municipio</label><input type="text" id="hFind" list="names" autocomplete="off" spellcheck="false" placeholder="Getafe"></div>
+        <p class="warn" id="hFindMsg" role="status"></p>
+        <div class="askNav"><button type="button" class="cta" id="toMap">Ver el mapa con calles y lugares</button><button type="button" id="youRedo">Cambiar respuestas</button></div>
+      </div>
+      <div class="askNav"><button type="button" id="youPrev">Atrás</button><button type="button" class="cta" id="youNext">Siguiente</button><button type="button" id="youBack">Volver al inicio (Esc)</button></div>
+    </div>
+  </section>
+  <canvas id="ridge" aria-hidden="true"></canvas>
+  <div class="htip" id="hTip" hidden></div>
+  <p class="hnote">Cada línea es una franja de terreno de oeste a este, con su altitud real (relieve del IGN, CC BY 4.0 scne.es).<br><i style="background:var(--water)"></i>alquiler mediano dentro de tu tope <i style="background:rgb(120,190,200)"></i>por encima <i style="background:rgb(120,140,155);opacity:.5"></i>sin dato de alquiler</p>
+</section>
+<!--__STORY__-->
+<aside>
+<header class="head">
+  <div class="kicker">DataMad 2026 · Comunidad de Madrid</div>
+  <h1>¿Dónde cabes?</h1>
+  <section id="result" aria-live="polite">
+    <div class="big none" id="big">–<span id="bigUnit">Elige un sueldo para ver el mapa</span></div>
+    <p class="lead" id="lead"></p>
+  </section>
+  <section id="card" hidden aria-labelledby="cardName" tabindex="-1"></section>
+</header>
+
+<section class="ctrl" aria-label="Tu perfil">
+  <button type="button" id="startTour">Ver el ejemplo de la persona media</button>
+  <div>
+    <label for="salary">Sueldo bruto al año</label>
+    <p class="warn" id="salaryErr" role="status" aria-live="polite"></p>
+    <div class="row">
+      <input type="text" id="salary" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="Ej.: 24.000…" aria-describedby="salaryHelp">
+      <button type="button" class="ref" id="ref" aria-pressed="false"></button>
+    </div>
+    <p class="note" id="salaryHelp">Tu sueldo no sale de esta página. Al ver las calles de un municipio, tu navegador pide al IGN las imágenes de esa zona.</p>
+  </div>
+  <div>
+    <label for="share">Parte del sueldo para el alquiler</label>
+    <div class="row"><input type="range" id="share" min="10" max="60" step="1" value="30"><output class="pct" id="shareOut" for="share">30 %</output></div>
+  </div>
+  <fieldset>
+    <legend>Sueldos en casa</legend>
+    <div class="seg row" id="earners">
+      <button type="button" data-v="1" aria-pressed="true">Uno</button>
+      <button type="button" data-v="2" aria-pressed="false">Dos iguales</button>
+    </div>
+  </fieldset>
+  <div>
+    <label for="find">Buscar municipio</label>
+    <input type="text" id="find" list="names" autocomplete="off" spellcheck="false" placeholder="Ej.: Getafe…" style="width:100%">
+    <datalist id="names"></datalist>
+    <p class="warn" id="findMsg" role="status" aria-live="polite"></p>
+  </div>
+  <details>
+    <summary id="listSum"></summary>
+    <ul id="list"></ul>
+  </details>
+</section>
+
+<footer class="foot">
+  <p id="credits"></p>
+</footer>
+</aside>
+
+<main>
+  <div class="mapwrap">
+  <svg id="map" role="img" aria-label="" preserveAspectRatio="xMidYMid meet">
+    <defs><pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#10202E"/><rect width="1.1" height="5" fill="#5B6680"/></pattern>
+      <pattern id="detIdle" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#6F7B96"/><circle cx="3" cy="3" r="1.25" fill="#08121C"/></pattern>
+      <pattern id="detWet" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#FFCF4A"/><circle cx="3" cy="3" r="1.25" fill="#08121C"/></pattern>
+      <pattern id="detDry" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#6E5F4B"/><circle cx="3" cy="3" r="1.25" fill="#08121C"/></pattern></defs>
+    <g id="tiles"></g><g id="shapes"></g><g id="labels"></g><g id="dots"></g>
+  </svg>
+  <p class="basenote" id="basenote" hidden></p>
+  <div class="zoom" role="group" aria-label="Vista del mapa"><button type="button" id="toHome" class="wide">Volver al relieve</button><button type="button" id="zin" aria-label="Acercar">+</button><button type="button" id="zout" aria-label="Alejar">−</button></div>
+  </div>
+  <p class="maptitle" id="maptitle" aria-hidden="true"></p>
+  <section id="tour" hidden aria-label="Recorrido de ejemplo" aria-live="polite">
+    <p class="tag">Persona ilustrativa: la media de 26 a 35 años</p>
+    <p class="say" id="say"></p>
+    <div class="nav">
+      <div class="steps" id="steps"><button type="button" data-i="0">Un sueldo, 30&nbsp;%</button><button type="button" data-i="1">Un sueldo, 40&nbsp;%</button><button type="button" data-i="2">Dos sueldos, 30&nbsp;%</button></div>
+      <button type="button" id="prev" aria-label="Paso anterior">←</button>
+      <button type="button" id="next" aria-label="Paso siguiente">→</button>
+      <button type="button" id="exitTour">Salir y escribir mi sueldo</button>
+    </div>
+  </section>
+  <div id="tip" aria-hidden="true"></div>
+  <section id="place" hidden aria-live="polite" aria-label="Lugar elegido"></section>
+  <div class="legend" id="legend">
+    <span id="lgWater" hidden><i class="sw-water"></i><span id="lgWaterText">Alquiler mediano dentro de tu tope</span></span>
+    <span id="lgDry" hidden><i class="sw-dry"></i>Por encima de tu tope</span>
+    <span id="lgIdle"><i class="sw-idle"></i>Con dato de alquiler</span>
+    <span id="lgDet"><i class="sw-det"></i>Casas unifamiliares: solo hay dato de casas</span>
+    <span><i class="sw-hatch"></i>Sin dato de alquiler</span>
+    <p class="rentnote" id="rentnote"></p>
+  </div>
+</main>
+
+<div id="error" role="alert" hidden>
+  <h1>¿Dónde cabes?</h1>
+  <p>No se han podido leer los datos de esta página. Vuelve a abrir el archivo; si sigue igual, hay que generarlo de nuevo con <code>python3 demo/build.py</code>.</p>
+</div>
+
+<script id="payload" type="application/json">__DATA__</script>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+const eur = n => fmt(n) + " €";
+const eurDown = n => fmt(Math.floor(n)) + " €";
+const norm = v => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+let P;
+try {
+  P = JSON.parse($("payload").textContent);
+  if (!P.data.municipalities.length || !P.map.shapes.length) throw 0;
+} catch (e) {
+  document.body.replaceChildren($("error"));
+  $("error").hidden = false;
+  return;
+}
+const D = P.data, M = P.map;
+const byIne = new Map(D.municipalities.map(m => [m.ine, m]));
+const withRent = D.municipalities.filter(m => m.rent).sort((a, b) => a.rent.value - b.rent.value);
+const isDet = m => m.rent && m.rent.type === "detached";
+const detCount = withRent.filter(isDet).length;
+const eur1 = n => (Number.isInteger(n) ? fmt(n) : fmt(Math.floor(n)) + "," + Math.round(n * 10) % 10) + " €";
+const fitsCap = (m, c) => Math.round(m.rent.value * 100) * 12 <= c.units;
+const RENT_SRC = withRent.length ? D.sources[withRent[0].rent.source] : null;
+const REF = D.reference.salary.total_eur / D.reference.salary.earners;
+const S = { salary: null, ref: false, share: 30, earners: 1, invalid: false, sel: null };
+
+function parseSalary(v) {
+  if (typeof v === "number") return v;
+  if (typeof v !== "string") return NaN;
+  const t = v.replace(/[\s€]/g, "");
+  if (/^\d{1,8}$/.test(t)) return Number(t);
+  if (/^\d{1,3}(\.\d{3}){1,2}$/.test(t)) return Number(t.replace(/\./g, ""));
+  return NaN;
+}
+function cap(annual, share, earners) {
+  const a = parseSalary(annual), s = share, e = earners;
+  if (!(Number.isFinite(a) && a > 0) || typeof s !== "number" || !(s >= 1 && s <= 100) || !(e === 1 || e === 2)) return null;
+  return { units: a * s * e, month: a * s * e / 1200 };
+}
+function affordable(annual, share, earners) {
+  const c = cap(annual, share, earners);
+  return c ? withRent.filter(m => fitsCap(m, c)).map(m => m.ine).sort() : null;
+}
+window.dondeCabes = { affordable, cap };
+
+const svgNS = "http://www.w3.org/2000/svg";
+$("map").setAttribute("viewBox", `-10 -10 ${M.width + 20} ${M.height + 20}`);
+const paths = {};
+const rank = Object.fromEntries(withRent.map((m, i) => [m.ine, i]));
+for (const s of M.shapes) {
+  const p = document.createElementNS(svgNS, "path");
+  p.setAttribute("d", s.d);
+  const m = s.ine && byIne.get(s.ine);
+  p.setAttribute("class", "m " + (!m ? "void" : isDet(m) ? "det" : m.rent ? "" : "nodata"));
+  if (m) { p.dataset.ine = s.ine; paths[s.ine] = p; if (m.rent) p.style.transitionDelay = rank[s.ine] * 14 + "ms"; }
+  $("shapes").append(p);
+}
+const labelAt = Object.fromEntries(M.shapes.filter(s => s.ine).map(s => [s.ine, s.label]));
+$("names").innerHTML = D.municipalities.map(m => `<option value="${m.name}">`).join("");
+$("ref").textContent = `Media de 26 a 35 años: ${eur(REF)} brutos`;
+$("list").innerHTML = withRent.map(m => `<li><button type="button" data-ine="${m.ine}"><span>${m.name}${isDet(m) ? ' <span class="muted">(casas)</span>' : ""}</span><span>${eur1(m.rent.value)} <span class="st"></span></span></button></li>`).join("");
+$("listSum").textContent = `Los ${withRent.length} municipios con dato, en lista`;
+$("maptitle").innerHTML = `<b>${D.municipalities.length} municipios de la Comunidad de Madrid</b>Alquiler mediano de 2024: hay dato en ${withRent.length}${detCount ? `, ${detCount} solo de casas unifamiliares` : ""}`;
+$("map").setAttribute("aria-label", `Mapa de los ${D.municipalities.length} municipios de la Comunidad de Madrid. En agua, los que tienen un alquiler mediano dentro de tu tope; con puntos, aquellos cuyo dato es solo de casas unifamiliares; rayados, los que no tienen dato de alquiler.`);
+$("lgDet").hidden = !detCount;
+$("rentnote").innerHTML = RENT_SRC ? `Alquiler mediano de 2024: ${RENT_SRC.title}.${RENT_SRC.note ? ` <span class="warn">${RENT_SRC.note}</span>` : ""} Los anuncios de hoy pueden ser más caros.` : "";
+const BAD = "Escribe tu sueldo bruto anual en euros, sin decimales: por ejemplo 24000 o 24.000.";
+const ADS = "Los anuncios de hoy pueden ser más caros.";
+
+function current() { return S.invalid ? null : cap(S.ref ? REF : S.salary, S.share, S.earners); }
+
+let shown = null, anim = 0;
+function countTo(el, n) {
+  const from = shown ?? 0, id = ++anim; shown = n;
+  if (reduced.matches || from === n) { el.firstChild.nodeValue = n; return; }
+  const t0 = performance.now();
+  const step = t => { if (id !== anim) return; const k = Math.min(1, (t - t0) / 400); el.firstChild.nodeValue = Math.round(from + (n - from) * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
+function render() {
+  const c = current();
+  $("ref").setAttribute("aria-pressed", String(S.ref));
+  $("salary").setAttribute("aria-invalid", String(S.invalid));
+  $("shareOut").textContent = S.share + " %";
+  for (const b of $("earners").children) b.setAttribute("aria-pressed", String(+b.dataset.v === S.earners));
+  const big = $("big");
+  $("salaryErr").textContent = S.invalid && !S.pending ? BAD : "";
+  let fits = new Set();
+  if (c) fits = new Set(withRent.filter(m => fitsCap(m, c)).map(m => m.ine));
+  for (const m of withRent) {
+    const p = paths[m.ine];
+    p.classList.toggle("wet", !!c && fits.has(m.ine));
+    p.classList.toggle("dry", !!c && !fits.has(m.ine));
+  }
+  $("lgWater").hidden = $("lgDry").hidden = !c;
+  $("lgIdle").hidden = !!c;
+  if (!c) {
+    shown = null; anim++;
+    big.className = "big none"; big.firstChild.nodeValue = "";
+    $("bigUnit").textContent = S.invalid ? "Sin resultado" : "Elige un sueldo para ver el mapa";
+    $("lead").innerHTML = S.invalid
+      ? `<span class="warn">${BAD}</span>`
+      : "Usa la media de 26 a 35 años o escribe tu sueldo bruto. El agua cubre los municipios cuyo alquiler mediano de 2024 queda dentro de tu tope.";
+  } else {
+    const n = fits.size, top = eurDown(c.month);
+    big.className = "big" + (n === 0 ? " zero" : "");
+    countTo(big, n);
+    const nDet = withRent.filter(m => isDet(m) && fits.has(m.ine)).length;
+    $("bigUnit").textContent = `de los ${withRent.length} con dato ${n === 1 ? "tiene" : "tienen"} un alquiler mediano de 2024 dentro de tu tope`;
+    $("lgWaterText").textContent = `Alquiler mediano hasta ${top} al mes`;
+    const who = S.earners === 2 ? "Con dos sueldos así, el tope del hogar" : "Tu tope";
+    const base = `el ${S.share} % de ${S.earners === 2 ? "dos sueldos de " : ""}${eur(S.ref ? REF : S.salary)} brutos al año`;
+    $("lead").innerHTML = n === 0
+      ? `${who} es <b class="cap">${top}</b> al mes, ${base}. Ningún municipio con dato tiene un alquiler mediano de 2024 dentro de ese tope. El más bajo es el de ${withRent[0].name}, <b>${eur1(withRent[0].rent.value)}</b>${isDet(withRent[0]) ? " (casas unifamiliares)" : ""}. ${ADS}`
+      : `${who} es <b class="cap">${top}</b> al mes, ${base}.${nDet ? ` En ${nDet} de ${n === 1 ? "ese" : "esos"} ${n} el dato es solo de casas unifamiliares.` : ""} ${ADS}`;
+  }
+  const q = new URLSearchParams();
+  if (S.ref) q.set("s", "ref");
+  q.set("p", S.share); if (S.earners === 2) q.set("n", 2); if (S.sel) q.set("m", S.sel);
+  history.replaceState(null, "", "#" + q);
+  lastFits = fits;
+  renderLabels(c, fits);
+  renderList(c, fits);
+  if (S.sel) renderCard();
+  home.paint();
+}
+
+let lastFits = new Set();
+function renderLabels(c, fits) {
+  const r = $("map").getBoundingClientRect(), vb = $("map").viewBox.baseVal;
+  const k = Math.min(r.width / vb.width, r.height / vb.height) || 1;
+  const px = Math.max(14, Math.min(24, innerWidth * 0.0125));
+  const names = new Set(["28079"]);
+  if (c && fits.size <= 6) fits.forEach(i => names.add(i));
+  if (S.sel) names.add(S.sel);
+  $("labels").innerHTML = [...names].map(i => {
+    const [x, y] = labelAt[i];
+    return `<text class="lbl" x="${x}" y="${y}" font-size="${(px / k).toFixed(2)}" style="stroke-width:${(px / 4 / k).toFixed(2)}px">${byIne.get(i).name}</text>`;
+  }).join("");
+}
+
+function renderList(c, fits) {
+  for (const st of $("list").querySelectorAll(".st")) {
+    const yes = !!c && fits.has(st.closest("button").dataset.ine);
+    st.className = "st " + (!c ? "" : yes ? "yes" : "muted");
+    st.textContent = !c ? "" : yes ? "dentro" : "por encima";
+  }
+}
+
+function src(id) { const s = D.sources[id]; return s ? `<a href="${s.url}" target="_blank" rel="noopener noreferrer">${s.title}</a>` : id; }
+
+function renderCard() {
+  const m = byIne.get(S.sel), c = current();
+  let rent;
+  const r = m.rent, det = isDet(m);
+  if (!r) rent = `<dd><b>Sin dato de alquiler.</b> No sabemos si cabes aquí.${c ? `<br><span class="note">Tu tope es ${eurDown(c.month)} al mes (${S.share} % del sueldo bruto), pero aquí no hay alquiler mediano con el que compararlo.</span>` : ""}</dd>`;
+  else {
+    const v = r.value, what = det ? "Alquiler mediano de casas unifamiliares de 2024" : "Alquiler mediano de 2024";
+    const top = `tu tope de <span class="nw">${eurDown(c ? c.month : 0)}</span> al mes (${S.share} % del sueldo bruto)`;
+    const verdict = !c ? "" : fitsCap(m, c)
+      ? `<br><span style="color:var(--water)">${what} dentro de ${top}</span>`
+      : `<br><span class="warn">${what}: <span class="nw">${eur1(Math.round((v - Math.floor(c.month)) * 10) / 10)}</span> por encima de ${top}</span>`;
+    const range = r.p25 != null && r.p75 != null ? `<br>La mitad de los contratos, entre <span class="nw">${eur1(r.p25)}</span> y <span class="nw">${eur1(r.p75)}</span>` : "";
+    const base = r.dwellings != null ? `Calculado con ${fmt(r.dwellings)} viviendas alquiladas. ` : "";
+    rent = `<dd><b>${eur1(v)}</b> al mes (${r.year})${det ? `<br><span class="note">Aquí solo hay dato de casas unifamiliares, no de pisos.</span>` : ""}${range}${verdict}<br><span class="note">${base}${ADS}</span></dd>`;
+  }
+  const rr = m.rent_regional;
+  const regional = rr ? `<div><dt>Otra medida: alquiler medio del portal de la Comunidad</dt><dd>${eur1(rr.value)} al mes (${rr.year})<br><span class="note">Es una media de otra fuente, no la mediana de arriba. El mapa y tu tope usan la mediana.</span></dd></div>` : "";
+  const g = m.youth_rent_grant;
+  const grant = g
+    ? `<b>${fmt(g.requests)}</b> solicitudes, ${fmt(g.accepted)} aceptadas y ${fmt(g.rejected)} rechazadas${g.requests ? ` (${Math.round(g.rejected / g.requests * 100)} % rechazadas)` : ""}`
+    : "Sin dato en este municipio";
+  const kids = m.population_0_4;
+  const count = x => x ? `<b>${fmt(x.value)}</b> (${x.year})` : "sin dato";
+  const early = [["Escuelas infantiles", m.nurseries, "tipos «Escuela infantil», «Escuela infantil privada» y «Escuela infantil-casa de niños»"], ["Centros privados de educación infantil", m.private_early_centres, "tipo «Centro privado de educación infantil»"]]
+    .map(([k, x, t]) => `${k}: ${count(x)}<br><span class="note">${t}</span>`).join("<br>");
+  const used = [m.rent, rr, m.population, kids, m.nurseries, m.private_early_centres, g].filter(Boolean).map(x => x.source);
+  $("card").innerHTML = `
+    <h2 id="cardName">${m.name}</h2>
+    ${S.invalid ? `<p class="warn" id="cardErr">${BAD}</p>` : ""}
+    <dl>
+      <div><dt>${det ? "Alquiler mediano de casas unifamiliares" : "Alquiler mediano"}</dt>${rent}</div>
+      ${regional}
+    </dl>
+    <section id="around" aria-labelledby="aroundH"></section>
+    <details class="more"><summary>Más datos de ${m.name}</summary><dl>
+      <div><dt>Población</dt><dd>${m.population ? `${fmt(m.population.value)} habitantes (${m.population.year})` : "Sin dato"}</dd></div>
+      <div><dt>Educación infantil: centros en alta por tipo de centro</dt><dd>${early}<br><span class="note">No cuenta los colegios que también imparten educación infantil. Niños de 0 a 4 años: ${kids ? `${fmt(kids.value)} (${kids.year})` : "sin dato"}.</span></dd></div>
+      <div><dt>Bono Alquiler Joven 2022</dt><dd>${grant}</dd></div>
+    </dl></details>
+    <div class="actions">
+      <a class="out" href="https://www.idealista.com/alquiler-habitacion/madrid-provincia/" target="_blank" rel="noopener noreferrer">Buscar habitaciones en idealista: sales de esta web, sin cifras nuestras</a>
+      <button type="button" class="close" id="close">Cerrar ficha (Esc)</button>
+    </div>
+    <p class="srcs">Fuentes: ${[...new Set(used)].map(src).join("; ")}.</p>`;
+  $("close").onclick = closeCard;
+  renderAround(m);
+}
+
+const LAYERS = [
+  ["health_centres", "Centros de salud", "#FF8A65", "plus"], ["pharmacies", "Farmacias", "#F2F5FA", "plus"],
+  ["schools", "Colegios", "#FF9EC7", "square"], ["cultural", "Cultura", "#C3A6FF", "diamond"],
+  ["sports", "Deporte", "#C3A6FF", "circle"], ["parks", "Parques", "#9BE564", "circle"],
+  ["bus_stops", "Paradas de autobús", "#F2F5FA", "dot"], ["metro_stations", "Metro", "#7FC8FF", "square"],
+  ["rail_stations", "Cercanías", "#F2F5FA", "triangle"], ["light_rail_stops", "Metro ligero", "#7FC8FF", "triangle"]];
+const LAYER = Object.fromEntries(LAYERS.map(([k, label, color, shape]) => [k, { label, color, shape }]));
+const on = new Set(LAYERS.map(l => l[0]).filter(k => k !== "bus_stops"));
+let place = null;
+function glyphPath(shape, x, y, s) {
+  const t = s * .42, f = n => +n.toFixed(2);
+  if (shape === "plus") return `M${f(x - t)} ${f(y - s)}h${f(2 * t)}v${f(s - t)}h${f(s - t)}v${f(2 * t)}h${f(t - s)}v${f(s - t)}h${f(-2 * t)}v${f(t - s)}h${f(t - s)}v${f(-2 * t)}h${f(s - t)}z`;
+  if (shape === "square") return `M${f(x - s * .85)} ${f(y - s * .85)}h${f(s * 1.7)}v${f(s * 1.7)}h${f(-s * 1.7)}z`;
+  if (shape === "diamond") return `M${f(x)} ${f(y - s * 1.2)}l${f(s * 1.2)} ${f(s * 1.2)}l${f(-s * 1.2)} ${f(s * 1.2)}l${f(-s * 1.2)} ${f(-s * 1.2)}z`;
+  if (shape === "triangle") return `M${f(x)} ${f(y - s * 1.15)}l${f(s * 1.15)} ${f(s * 1.95)}h${f(-s * 2.3)}z`;
+  const r = shape === "dot" ? s * .6 : s;
+  return `M${f(x - r)} ${f(y)}a${f(r)} ${f(r)} 0 1 0 ${f(2 * r)} 0a${f(r)} ${f(r)} 0 1 0 ${f(-2 * r)} 0`;
+}
+const glyph = k => `<svg class="glyph" viewBox="-12 -12 24 24" aria-hidden="true"><path d="${glyphPath(LAYER[k].shape, 0, 0, 8)}" fill="${LAYER[k].color}" stroke="#08121C" stroke-width="2"/></svg>`;
+const ptsOf = (k, ine) => (P.places[k] && P.places[k][ine]) || [];
+const pname = (k, p) => p[2] || p[4] || LAYER[k].label;
+const esc = v => String(v).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+function renderAround(m) {
+  const rows = LAYERS.map(([k]) => {
+    const a = m.around ? m.around[k] : null, n = ptsOf(k, m.ine).length;
+    const count = !a ? "sin dato" : a.value === 0 ? "ninguno" : fmt(a.value) + (n < a.value ? ` (${fmt(n)} en el mapa)` : "");
+    return `<button type="button" data-k="${k}" aria-pressed="${n > 0 && on.has(k)}"${n ? "" : " disabled"}>${glyph(k)}<span>${LAYER[k].label}</span><span class="n">${count}</span></button>`;
+  }).join("");
+  $("around").innerHTML = `<h3 id="aroundH" class="kicker">Qué hay en ${m.name}: toca una capa para verla en el mapa</h3><div class="layers" id="layers">${rows}</div><div id="plist"></div>`;
+  $("layers").onclick = e => { const b = e.target.closest("button"); if (!b || b.disabled) return; const k = b.dataset.k; on.has(k) ? on.delete(k) : on.add(k); b.setAttribute("aria-pressed", String(on.has(k))); if (place && !on.has(place[0])) showPlace(null); renderPlaces(); };
+  renderPlaces();
+}
+function renderPlaces() {
+  const ine = S.sel;
+  $("plist").innerHTML = !ine ? "" : LAYERS.filter(([k]) => on.has(k) && ptsOf(k, ine).length).map(([k]) => `<h3>${glyph(k)}${LAYER[k].label}</h3>${D.definitions && D.definitions[k] ? `<p class="note">${esc(D.definitions[k])}</p>` : ""}<ul>${ptsOf(k, ine).map((p, i) => `<li><button type="button" data-k="${k}" data-i="${i}" aria-current="${!!place && place[0] === k && place[1] === i}">${esc(pname(k, p))}<small>${p[3] ? esc(p[3]) : "Sin dirección en el dato"}</small></button></li>`).join("")}</ul>`).join("");
+  renderDots();
+}
+function renderDots() {
+  const g = $("dots");
+  if (!S.sel) { g.innerHTML = ""; return; }
+  const r = $("map").getBoundingClientRect(), vb = $("map").viewBox.baseVal;
+  const k = Math.min(r.width / vb.width, r.height / vb.height) || 1, s = Math.max(7, Math.min(13, innerWidth * .0062)) / k;
+  g.innerHTML = LAYERS.filter(([l]) => on.has(l)).map(([l]) => `<g fill="${LAYER[l].color}">${ptsOf(l, S.sel).map((p, i) => `<path data-k="${l}" data-i="${i}"${place && place[0] === l && place[1] === i ? ' class="on"' : ""} d="${glyphPath(LAYER[l].shape, p[0], p[1], place && place[0] === l && place[1] === i ? s * 1.6 : s)}"/>`).join("")}</g>`).join("")
+    + (place && on.has(place[0]) ? (([x, y]) => `<circle class="ring" cx="${x}" cy="${y}" r="${(s * 3.2).toFixed(2)}"/>`)(ptsOf(place[0], S.sel)[place[1]]) : "");
+}
+function showPlace(ref, fromList) {
+  place = ref;
+  const box = $("place");
+  if (!ref) { box.hidden = true; } else {
+    const [k, i] = ref, p = ptsOf(k, S.sel)[i];
+    box.innerHTML = `<span class="kind">${glyph(k)}${LAYER[k].label} en ${byIne.get(S.sel).name}</span><b>${esc(pname(k, p))}</b><span>${p[3] ? esc(p[3]) : "Sin dirección en el dato"}</span>${p[2] && p[4] ? `<span class="muted">${esc(p[4])}</span>` : ""}${p[2] ? "" : `<span class="muted">Sin nombre en el dato</span>`}<button type="button" class="close" id="placeClose">Cerrar lugar (Esc)</button>`;
+    box.hidden = false;
+    $("placeClose").onclick = () => { const b = $("plist").querySelector(`button[data-k="${k}"][data-i="${i}"]`); showPlace(null); (b || $("card")).focus(); };
+  }
+  for (const b of $("plist").querySelectorAll("button")) b.setAttribute("aria-current", String(!!ref && b.dataset.k === ref[0] && +b.dataset.i === ref[1]));
+  renderDots();
+  if (ref && !fromList) { const b = $("plist").querySelector(`button[data-k="${ref[0]}"][data-i="${ref[1]}"]`); if (b) b.scrollIntoView({ block: "nearest" }); }
+}
+let vbAnim = 0;
+const setVB = v => $("map").setAttribute("viewBox", v.map(n => n.toFixed(2)).join(" "));
+const getVB = () => { const v = $("map").viewBox.baseVal; return [v.x, v.y, v.width, v.height]; };
+function afterView() { renderLabels(current(), lastFits); renderDots(); renderTiles(); }
+const [LON0, LAT1, KX, SC] = M.proj;
+const IGN = (z, x, y) => `https://www.ign.es/wmts/ign-base?service=WMTS&request=GetTile&version=1.0.0&layer=IGNBaseTodo&style=default&tilematrixset=GoogleMapsCompatible&tilematrix=${z}&tilerow=${y}&tilecol=${x}&format=image/jpeg`;
+const tLon = (x, z) => x / 2 ** z * 360 - 180;
+const tLat = (y, z) => 180 / Math.PI * Math.atan(Math.sinh(Math.PI - 2 * Math.PI * y / 2 ** z));
+const lonT = (lon, z) => Math.floor((lon + 180) / 360 * 2 ** z);
+const latT = (lat, z) => { const r = lat * Math.PI / 180; return Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * 2 ** z); };
+const tiles = new Map();
+let tileOk = 0, tileBad = 0;
+function baseNote() {
+  const n = $("basenote");
+  n.hidden = !S.sel;
+  n.textContent = tileBad && !tileOk ? "Sin conexión con el IGN: el mapa sigue sin calles." : "Mapa base: IGN, CC BY 4.0 scne.es";
+  $("map").classList.toggle("streets", !!S.sel && tileOk > 0);
+}
+function renderTiles() {
+  const g = $("tiles");
+  if (!S.sel) { tiles.clear(); g.replaceChildren(); tileOk = tileBad = 0; baseNote(); return; }
+  const r = $("map").getBoundingClientRect(), [vx, vy, vw, vh] = getVB(), k = Math.min(r.width / vw, r.height / vh) || 1;
+  const cx = vx + vw / 2, cy = vy + vh / 2, hw = r.width / k / 2, hh = r.height / k / 2;
+  const z = Math.max(8, Math.min(18, Math.round(Math.log2(360 * KX * SC * k * (devicePixelRatio || 1) / 256))));
+  const x0 = lonT(LON0 + (cx - hw) / (KX * SC), z), x1 = lonT(LON0 + (cx + hw) / (KX * SC), z);
+  const y0 = latT(LAT1 - (cy - hh) / SC, z), y1 = latT(LAT1 - (cy + hh) / SC, z);
+  if ((x1 - x0 + 1) * (y1 - y0 + 1) > 120) return;
+  const want = new Set();
+  for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) {
+    const id = `${z}/${x}/${y}`; want.add(id);
+    if (tiles.has(id)) continue;
+    const im = document.createElementNS(svgNS, "image"), X = (tLon(x, z) - LON0) * KX * SC, Y = (LAT1 - tLat(y, z)) * SC;
+    im.setAttribute("x", X); im.setAttribute("y", Y);
+    im.setAttribute("width", (tLon(x + 1, z) - LON0) * KX * SC - X); im.setAttribute("height", (LAT1 - tLat(y + 1, z)) * SC - Y);
+    im.setAttribute("preserveAspectRatio", "none");
+    im.addEventListener("load", () => { tileOk++; baseNote(); });
+    im.addEventListener("error", () => { tileBad++; im.remove(); baseNote(); });
+    im.setAttribute("href", IGN(z, x, y));
+    tiles.set(id, im); g.append(im);
+  }
+  for (const [id, im] of tiles) if (!want.has(id) && +id.split("/")[0] !== z) { im.remove(); tiles.delete(id); }
+  baseNote();
+}
+function zoomBy(f, ux, uy) {
+  const [vx, vy, vw, vh] = getVB(), full = M.width + 20, nw = Math.max(4, Math.min(full, vw * f)), q = nw / vw;
+  if (ux == null) { ux = vx + vw / 2; uy = vy + vh / 2; }
+  vbAnim++; setVB([ux - (ux - vx) * q, uy - (uy - vy) * q, nw, vh * q]); later();
+}
+let laterT = 0;
+function later() { renderLabels(current(), lastFits); clearTimeout(laterT); laterT = setTimeout(afterView, 120); }
+const toUnits = (e) => { const r = $("map").getBoundingClientRect(), [vx, vy, vw, vh] = getVB(), k = Math.min(r.width / vw, r.height / vh); return [vx + vw / 2 + (e.clientX - r.left - r.width / 2) / k, vy + vh / 2 + (e.clientY - r.top - r.height / 2) / k, k]; };
+$("map").addEventListener("wheel", e => { e.preventDefault(); const [ux, uy] = toUnits(e); zoomBy(Math.exp(e.deltaY * .0015), ux, uy); }, { passive: false });
+$("zin").onclick = () => zoomBy(1 / 1.6);
+$("zout").onclick = () => zoomBy(1.6);
+let drag = null, dragged = false;
+$("map").addEventListener("pointerdown", e => { if (e.button === 0) { drag = [e.clientX, e.clientY, getVB()]; dragged = false; } });
+addEventListener("pointermove", e => {
+  if (!drag) return;
+  const dx = e.clientX - drag[0], dy = e.clientY - drag[1];
+  if (!dragged && Math.hypot(dx, dy) < 5) return;
+  if (!dragged) { dragged = true; $("map").classList.add("dragging"); }
+  const r = $("map").getBoundingClientRect(), v = drag[2], k = Math.min(r.width / v[2], r.height / v[3]);
+  vbAnim++; setVB([v[0] - dx / k, v[1] - dy / k, v[2], v[3]]); clearTimeout(laterT); laterT = setTimeout(afterView, 120);
+});
+addEventListener("pointerup", () => { drag = null; $("map").classList.remove("dragging"); });
+$("map").addEventListener("click", e => { if (dragged) { e.stopPropagation(); dragged = false; } }, true);
+function zoomTo(ine) {
+  const full = [-10, -10, M.width + 20, M.height + 20];
+  let to = full;
+  if (ine) {
+    const b = paths[ine].getBBox(), w = Math.max(b.width, 60) * 1.3, h = Math.max(b.height, 60) * 1.3;
+    to = [b.x + b.width / 2 - w / 2, b.y + b.height / 2 - h / 2, w, h];
+  }
+  const vb = $("map").viewBox.baseVal, from = [vb.x, vb.y, vb.width, vb.height], id = ++vbAnim, t0 = performance.now();
+  const set = setVB;
+  const done = () => { set(to); afterView(); };
+  if (reduced.matches) return done();
+  $("dots").innerHTML = "";
+  const step = t => { if (id !== vbAnim) return; const k = Math.min(1, (t - t0) / 650), e = 1 - Math.pow(1 - k, 3); set(from.map((f, j) => f + (to[j] - f) * e)); renderLabels(current(), lastFits); if (k < 1) requestAnimationFrame(step); else done(); };
+  requestAnimationFrame(step);
+}
+
+function openCard(ine, focus) {
+  if (!byIne.has(ine)) return;
+  if (S.sel) paths[S.sel].classList.remove("sel");
+  const moved = S.sel !== ine;
+  S.sel = ine; paths[ine].classList.add("sel"); $("shapes").append(paths[ine]);
+  if (moved) { place = null; $("place").hidden = true; zoomTo(ine); }
+  $("findMsg").textContent = ""; $("find").removeAttribute("aria-invalid");
+  $("result").hidden = true; $("card").hidden = false;
+  render();
+  if (focus) $("card").focus({ preventScroll: true });
+  $("card").scrollIntoView({ block: "start" });
+}
+let back = null;
+function closeCard(refocus = true) {
+  if (!S.sel) return;
+  paths[S.sel].classList.remove("sel");
+  S.sel = null; $("card").hidden = true; $("result").hidden = false;
+  place = null; $("place").hidden = true; zoomTo(null);
+  render();
+  if (refocus) (back && document.contains(back) ? back : $("find")).focus();
+}
+
+let errTimer = 0;
+$("salary").addEventListener("input", e => {
+  const v = parseSalary(e.target.value);
+  S.ref = false; S.pending = false; clearTimeout(errTimer);
+  if (e.target.value.trim() === "") { S.salary = null; S.invalid = false; }
+  else if (Number.isFinite(v) && v > 0) { S.salary = v; S.invalid = false; }
+  else { S.salary = null; S.invalid = true; S.pending = true; errTimer = setTimeout(() => { S.pending = false; render(); }, 700); }
+  render();
+});
+$("find").addEventListener("input", e => { if (!e.target.value.trim()) { $("findMsg").textContent = ""; e.target.removeAttribute("aria-invalid"); } });
+$("ref").onclick = () => { S.ref = !S.ref; S.invalid = false; $("salary").value = S.ref ? fmt(REF) : ""; S.salary = S.ref ? REF : null; render(); };
+$("share").addEventListener("input", e => { S.share = +e.target.value; render(); });
+$("earners").onclick = e => { const b = e.target.closest("button"); if (b) { S.earners = +b.dataset.v; render(); } };
+function search() {
+  const raw = $("find").value.trim(), q = norm(raw);
+  if (!q) { $("findMsg").textContent = ""; return; }
+  const m = D.municipalities.find(x => norm(x.name) === q);
+  if (m) { $("findMsg").textContent = ""; $("find").removeAttribute("aria-invalid"); back = $("find"); openCard(m.ine, true); return; }
+  closeCard(false);
+  $("find").setAttribute("aria-invalid", "true");
+  $("findMsg").textContent = `No hay ningún municipio llamado «${raw}» en la Comunidad de Madrid.`;
+}
+$("find").addEventListener("change", search);
+$("find").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); search(); } });
+$("list").onclick = e => { const b = e.target.closest("button"); if (b) { back = b; openCard(b.dataset.ine, true); } };
+const tip = $("tip");
+$("dots").addEventListener("click", e => { const d = e.target.closest("[data-k]"); if (d) showPlace([d.dataset.k, +d.dataset.i]); });
+$("dots").addEventListener("pointermove", e => {
+  const d = e.target.closest("[data-k]"); if (!d) return;
+  const p = ptsOf(d.dataset.k, S.sel)[+d.dataset.i], r = $("map").parentElement.getBoundingClientRect();
+  tip.textContent = `${LAYER[d.dataset.k].label}: ${pname(d.dataset.k, p)}${p[3] ? ", " + p[3] : ""}`;
+  tip.style.left = Math.min(e.clientX - r.left + 18, r.width - tip.offsetWidth - 8) + "px";
+  tip.style.top = Math.max(e.clientY - r.top - 50, 8) + "px"; tip.style.opacity = 1;
+});
+$("dots").addEventListener("pointerleave", () => { tip.style.opacity = 0; });
+$("card").addEventListener("click", e => { const b = e.target.closest("#plist button"); if (b) showPlace([b.dataset.k, +b.dataset.i], true); });
+$("card").addEventListener("keydown", e => {
+  const b = e.target.closest("#plist button"); if (!b || !["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) return;
+  const all = [...$("plist").querySelectorAll("button")], i = all.indexOf(b);
+  const j = e.key === "Home" ? 0 : e.key === "End" ? all.length - 1 : Math.max(0, Math.min(all.length - 1, i + (e.key === "ArrowDown" ? 1 : -1)));
+  e.preventDefault(); all[j].focus(); showPlace([all[j].dataset.k, +all[j].dataset.i], true);
+});
+$("shapes").addEventListener("click", e => { const p = e.target.closest("[data-ine]"); if (p) { back = null; openCard(p.dataset.ine, true); } });
+addEventListener("resize", afterView);
+$("shapes").addEventListener("pointermove", e => {
+  const p = e.target.closest("[data-ine]"); if (!p) { tip.style.opacity = 0; return; }
+  const m = byIne.get(p.dataset.ine), r = $("map").parentElement.getBoundingClientRect();
+  tip.textContent = `${m.name}: ${m.rent ? eur1(m.rent.value) + " de alquiler mediano" + (isDet(m) ? " (casas unifamiliares)" : "") : "sin dato de alquiler"}`;
+  tip.style.left = Math.min(e.clientX - r.left + 18, r.width - tip.offsetWidth - 8) + "px";
+  tip.style.top = Math.max(e.clientY - r.top - 50, 8) + "px";
+  tip.style.opacity = 1;
+});
+$("shapes").addEventListener("pointerleave", () => { tip.style.opacity = 0; });
+const SCENES = [{ share: 30, earners: 1 }, { share: 40, earners: 1 }, { share: 30, earners: 2 }];
+let tour = -1, saved = null;
+function hideTour(restore, keepText) {
+  tour = -1; $("tour").hidden = true; document.querySelector(".maptitle").hidden = false;
+  if (restore && saved) { Object.assign(S, { ref: saved.ref, salary: saved.salary, invalid: saved.invalid, share: saved.share, earners: saved.earners }); if (!keepText) $("salary").value = saved.text; $("share").value = saved.share; }
+}
+function scene(i) {
+  if (tour < 0) saved = { ref: S.ref, salary: S.salary, invalid: S.invalid, share: S.share, earners: S.earners, text: $("salary").value };
+  tour = Math.max(0, Math.min(SCENES.length - 1, i));
+  const sc = SCENES[tour], n = affordable(REF, sc.share, sc.earners).length, top = `<span class="nw">${eurDown(cap(REF, sc.share, sc.earners).month)}</span>`, of = `de los ${withRent.length} con dato`;
+  closeCard(false);
+  Object.assign(S, { ref: true, salary: REF, invalid: false, share: sc.share, earners: sc.earners });
+  $("salary").value = fmt(REF); $("share").value = sc.share;
+  $("say").innerHTML = [
+    `«Soy la media de mi edad: ${eur(REF)} brutos al año. Con un sueldo y el ${sc.share}&nbsp;%, mi tope es ${top} al mes: entro en <b>${n}</b> ${of}.»`,
+    `«Si dedico el ${sc.share}&nbsp;%, mi tope sube a ${top} al mes: entro en <b>${n}</b> ${of}.»`,
+    `«Con dos sueldos como el mío, al ${sc.share}&nbsp;%, el tope de casa es ${top} al mes: entramos en <b>${n}</b> ${of}.»`][tour];
+  for (const b of $("steps").children) b.setAttribute("aria-current", +b.dataset.i === tour ? "step" : "false");
+  const lost = document.activeElement === $("next") && tour === SCENES.length - 1 || document.activeElement === $("prev") && tour === 0;
+  $("prev").disabled = tour === 0; $("next").disabled = tour === SCENES.length - 1;
+  $("tour").hidden = false; document.querySelector(".maptitle").hidden = true;
+  render();
+  if (lost || !$("tour").contains(document.activeElement)) $(tour === SCENES.length - 1 ? "exitTour" : "next").focus({ preventScroll: true });
+}
+function endTour() {
+  if (tour < 0) return;
+  hideTour(true);
+  render(); $("salary").focus();
+}
+$("startTour").onclick = () => { scene(0); $("tour").scrollIntoView({ block: "start", behavior: reduced.matches ? "auto" : "smooth" }); };
+$("next").onclick = () => scene(tour + 1);
+$("prev").onclick = () => scene(tour - 1);
+$("exitTour").onclick = endTour;
+$("steps").onclick = e => { const b = e.target.closest("button"); if (b) scene(+b.dataset.i); };
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    if (place) { const [k, i] = place, b = $("plist").querySelector(`button[data-k="${k}"][data-i="${i}"]`); showPlace(null); (b || $("card")).focus(); }
+    else if (tour >= 0 && !S.sel) endTour(); else closeCard();
+    return;
+  }
+  if (tour < 0 || e.altKey || e.metaKey || e.ctrlKey || e.shiftKey) return;
+  const free = e.target === document.body || e.target === document.documentElement || ($("tour").contains(e.target) && e.target.tagName !== "BUTTON");
+  if (e.key === " " && free) { e.preventDefault(); scene(tour + 1); }
+  else if ((e.key === "ArrowRight" || e.key === "ArrowLeft") && (free || $("tour").contains(e.target))) { e.preventDefault(); scene(tour + (e.key === "ArrowRight" ? 1 : -1)); }
+});
+for (const [id, ev] of [["salary", "input"], ["share", "input"], ["earners", "click"], ["ref", "click"]]) $(id).addEventListener(ev, () => {
+  if (tour < 0) return;
+  hideTour(true, id === "salary");
+  if (id === "ref") S.ref = false;
+}, true);
+
+$("credits").innerHTML = `Fuentes: ${Object.entries(D.sources).map(([k, s]) => `${src(k)}${s.credit ? `. ${s.credit}` : ""}${s.link ? ` (<a href="${s.link}" target="_blank" rel="noopener noreferrer">${s.link.replace(/^https?:\/\//, "").replace(/\/$/, "")}</a>${s.edition ? `, edición del ${s.edition}` : ""})` : ""}${s.license ? `, licencia ${s.license}` : ""}`).join("; ")}. Contornos convertidos a longitud y latitud; esta página los proyecta y redondea para dibujarlos. Datos generados el ${D.generated}. Sueldo medio bruto anual de ${D.reference.salary.year} de las personas de 26 a 35 años con domicilio en la Comunidad de Madrid que cobraron algún salario, también quienes trabajaron parte del año o a tiempo parcial (Agencia Tributaria). La ficha del portal indica por error ámbito nacional (<a href="${D.reference.salary.scope_evidence}" target="_blank" rel="noopener noreferrer">tabla de la Agencia Tributaria</a>). Fuentes tipográficas del sistema. La animación de la historia usa GSAP 3.15.1 y ScrollTrigger de GreenSock, incluidos en esta página, con su licencia estándar (gsap.com/standard-license).`;
+
+const home = (() => {
+  const el = $("home"), cv = $("ridge"), x = cv.getContext("2d"), rows = P.ridges, mun = D.municipalities;
+  const total = withRent.length;
+  let lit = new Float32Array(mun.length), born = 0, mx = 0, mxNow = 0, hover = -1, running = false, hits = [], shownN = null;
+  const target = () => { const c = current(); return mun.map(m => c && m.rent && fitsCap(m, c) ? 1 : 0); };
+  function draw(now) {
+    const dpr = Math.min(devicePixelRatio || 1, 2), w = cv.clientWidth, h = cv.clientHeight;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    x.setTransform(dpr, 0, 0, dpr, 0, 0); x.fillStyle = "#08121C"; x.fillRect(0, 0, w, h);
+    const ask = el.classList.contains("asking"), narrow = !ask && (w < 820 || h < 640), tg = target(), still = reduced.matches;
+    let moving = false;
+    for (let i = 0; i < lit.length; i++) { const d = tg[i] - lit[i]; if (still || Math.abs(d) < .01) lit[i] = tg[i]; else { lit[i] += d * .09; moving = true; } }
+    mxNow += still ? mx - mxNow : (mx - mxNow) * .08; if (Math.abs(mx - mxNow) > .002) moving = true;
+    const R = rows.length, C = rows[0].length, gw = ask ? Math.min(w * .96, h * 1.5) : narrow ? w * .98 : Math.min(w * .66, h * 1.05), gh = ask ? h * (el.dataset.q === "3" ? .38 : .5) : narrow ? h * .82 : h * .66;
+    const ox = ask ? (w - gw) / 2 + mxNow * 28 : narrow ? w * .01 : w - gw - w * .03 + mxNow * 28, oy = ask ? h * (el.dataset.q === "3" ? .6 : w < 820 ? .5 : .44) : narrow ? h * .1 : h * .18;
+    hits = [];
+    for (let j = 0; j < R; j++) {
+      const pr = j / R, rise = still ? 1 : Math.max(0, Math.min(1, (now - born - j * 9) / 650)), e = 1 - Math.pow(1 - rise, 4);
+      if (rise < 1) moving = true;
+      if (!e) continue;
+      const sc = .72 + .34 * pr, by = oy + gh * pr, row = rows[j];
+      let seg = [];
+      const flush = () => {
+        if (seg.length > 1) {
+          x.beginPath(); x.moveTo(seg[0][0], by + 12); for (const q of seg) x.lineTo(q[0], q[1]); x.lineTo(seg[seg.length - 1][0], by + 12); x.fillStyle = "#08121C"; x.fill();
+          let k = 1;
+          while (k < seg.length) {
+            const o = seg[k][2], key = o === hover && o >= 0 ? 99 : o < 0 || !mun[o].rent ? -1 : Math.round(lit[o] * 6);
+            x.beginPath(); x.moveTo(seg[k - 1][0], seg[k - 1][1]);
+            while (k < seg.length) { const o2 = seg[k][2], k2 = o2 === hover && o2 >= 0 ? 99 : o2 < 0 || !mun[o2].rent ? -1 : Math.round(lit[o2] * 6); if (k2 !== key) break; x.lineTo(seg[k][0], seg[k][1]); k++; }
+            const v = key / 6;
+            x.strokeStyle = key === 99 ? "#FFFFFF" : key < 0 ? "rgba(120,140,155,.28)" : v > .02 ? `rgba(255,${Math.round(150 + 57 * v)},74,${.3 + .7 * v})` : "rgba(120,190,200,.55)";
+            x.lineWidth = key === 99 ? 2.6 : 1 + 1.4 * Math.max(0, v); x.stroke();
+          }
+        }
+        seg = [];
+      };
+      for (let c = 0; c < C; c++) {
+        const q = row[c];
+        if (!q) { flush(); continue; }
+        const o = q[1], v = o >= 0 ? lit[o] : 0, z = (q[0] - 380) * gh * .00017 * sc, X = ox + gw / 2 + (c / C - .5) * gw * sc, Y = by - (z + v * 7 + (o === hover && o >= 0 ? 4 : 0)) * e;
+        seg.push([X, Y, o]); if (o >= 0 && c % 2 === 0) hits.push(X, Y, o);
+      }
+      flush();
+    }
+    return moving;
+  }
+  const loop = t => { if (el.hidden) { running = false; return; } running = draw(t); if (running) requestAnimationFrame(loop); };
+  const kick = () => { if (!running && !el.hidden) { running = true; requestAnimationFrame(loop); } };
+  function pick(e) {
+    const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+    let best = -1, bd = 18 * 18;
+    for (let i = 0; i < hits.length; i += 3) { const d = (hits[i] - px) ** 2 + (hits[i + 1] - py) ** 2; if (d < bd) { bd = d; best = hits[i + 2]; } }
+    return [best, px, py];
+  }
+  function tipAt(o, px, py, touch) {
+    const t = $("hTip");
+    if (o < 0) { t.hidden = true; return; }
+    const m = mun[o];
+    t.innerHTML = `<b>${m.name}</b>${m.rent ? `${eur1(m.rent.value)} de alquiler mediano${isDet(m) ? " (casas unifamiliares)" : ""}` : "Sin dato de alquiler"}${touch ? `<br><button type="button" id="hGo">Ver ${m.name} en el mapa</button>` : ""}`;
+    t.hidden = false;
+    const cr = cv.getBoundingClientRect(), hr = el.getBoundingClientRect();
+    t.style.left = Math.max(8, Math.min(cr.left - hr.left + px + 16, hr.width - t.offsetWidth - 8)) + "px";
+    t.style.top = Math.max(8, cr.top - hr.top + el.scrollTop + py - t.offsetHeight - 14) + "px";
+    if (touch) $("hGo").onclick = () => go(m.ine);
+  }
+  cv.addEventListener("pointermove", e => {
+    mx = e.clientX / innerWidth - .5;
+    if (e.pointerType !== "mouse") { kick(); return; }
+    const [o, px, py] = pick(e); if (o !== hover) { hover = o; } tipAt(o, px, py, false); kick();
+  });
+  cv.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") { hover = -1; $("hTip").hidden = true; kick(); } });
+  cv.addEventListener("click", e => { const [o, px, py] = pick(e); if (e.pointerType === "mouse" || !e.pointerType) { if (o >= 0) go(mun[o].ine); } else { hover = o; tipAt(o, px, py, true); kick(); } });
+  function go(ine) {
+    const story = $("story");
+    const done = () => { el.hidden = true; youV.hidden = true; el.classList.remove("leaving", "asking"); if (story) { story.classList.remove("leaving"); story.inert = false; } el.querySelector(".hl").inert = false; document.documentElement.style.overflow = ""; document.body.classList.remove("asking"); document.body.classList.remove("onhome"); scrollTo(0, 0); $("hTip").hidden = true; hover = -1; afterView(); if (ine) { back = null; openCard(ine, true); } else $("find").focus(); };
+    if (ine) { const m = byIne.get(ine); $("find").value = m.name; }
+    if (reduced.matches) return done();
+    el.classList.add("leaving"); if (story) story.classList.add("leaving"); setTimeout(done, 450);
+  }
+  function show() {
+    closeCard(false); el.hidden = false; document.body.classList.add("onhome"); scrollTo(0, 0); born = performance.now(); lit.fill(0); shownN = null; paint(); kick();
+    $("hSteps").querySelector("button").focus({ preventScroll: true });
+  }
+  let nAnim = 0;
+  function paint() {
+    if (el.hidden) return;
+    const c = current(), n = c ? withRent.filter(m => fitsCap(m, c)).length : null, nd = c ? withRent.filter(m => isDet(m) && fitsCap(m, c)).length : 0, b = $("hN");
+    if (n === null) { b.textContent = "–"; shownN = null; }
+    else { const from = shownN ?? 0, id = ++nAnim, t0 = performance.now(); shownN = n;
+      const st = t => { if (id !== nAnim) return; const k = reduced.matches ? 1 : Math.min(1, (t - t0) / 600); b.textContent = Math.round(from + (n - from) * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(st); };
+      requestAnimationFrame(st); }
+    $("hSay").textContent = !c ? (S.invalid ? BAD : "Elige a la persona media o escribe tu sueldo bruto anual.")
+      : `de los ${total} municipios con dato tienen un alquiler mediano de 2024 dentro de tu tope de ${eurDown(c.month)} al mes${S.earners === 2 ? " con dos sueldos" : ""}.${nd ? ` En ${nd} de ellos el dato es solo de casas unifamiliares.` : ""} Lo encendido cabe.`;
+    $("hSalary").setAttribute("aria-invalid", String(S.invalid));
+    $("hSalaryErr").textContent = S.invalid && !S.pending ? BAD : "";
+    $("hShare").value = $("hShare2").value = S.share; $("hShareOut").textContent = $("hShareOut2").textContent = S.share + " %";
+    for (const bt of $("hEarn").children) bt.setAttribute("aria-pressed", String(+bt.dataset.v === S.earners));
+    $("youRes").innerHTML = !c ? (S.invalid ? BAD : "Escribe tu sueldo bruto anual para ver tu tope.")
+      : `<b class="n${n ? "" : " zero"}">${n}</b> de los ${total} municipios con dato ${n === 1 ? "tiene" : "tienen"} un alquiler mediano de 2024 dentro de tu tope de <span class="cap nw">${eurDown(c.month)}</span> al mes: el ${S.share}&nbsp;% de ${S.earners === 2 ? "dos sueldos de " : ""}${eur(S.ref ? REF : S.salary)} brutos al año.`
+        + (n === 0 ? ` El más bajo es el de ${withRent[0].name}, ${eur1(withRent[0].rent.value)}${isDet(withRent[0]) ? " (casas unifamiliares)" : ""}.` : nd ? ` En ${nd} de ${n === 1 ? "ese" : "esos"} ${n} el dato es solo de casas unifamiliares.` : "") + ` ${ADS}`;
+    const sc = S.ref ? SCENES.findIndex(q => q.share === S.share && q.earners === S.earners) : -1;
+    for (const bt of $("hSteps").children) bt.setAttribute("aria-pressed", String(+bt.dataset.i === sc));
+    kick();
+  }
+  const youV = $("youView"), QS = [...youV.querySelectorAll(".q")];
+  let q = 0;
+  function step(i) {
+    q = i; el.dataset.q = i; kick();
+    QS.forEach((d, j) => { d.hidden = j !== q; });
+    $("youStep").textContent = q < 3 ? `Pregunta ${q + 1} de 3` : "Tu resultado";
+    $("youPrev").hidden = q === 0 || q === 3; $("youNext").hidden = q === 3;
+    $("youNext").textContent = q === 2 ? "Ver dónde quepo" : "Siguiente";
+    const f = [$("hSalary"), $("hShare2"), $("hEarn").querySelector('[aria-pressed="true"]'), $("hFind")][q];
+    f.focus({ preventScroll: true }); youV.scrollTop = 0;
+  }
+  function next() {
+    if (q === 0 && !current()) { S.pending = false; if (!$("hSalary").value.trim()) S.invalid = true; render(); $("hSalaryErr").textContent = BAD; $("hSalary").focus(); return; }
+    if (q < 3) step(q + 1);
+  }
+  function openYou() {
+    clearTimeout(errTimer);
+    Object.assign(S, { ref: false, salary: null, invalid: false, pending: false, share: 30, earners: 1 });
+    $("salary").value = $("hSalary").value = ""; $("share").value = 30; $("hFind").value = ""; $("hFindMsg").textContent = "";
+    el.classList.add("asking"); youV.hidden = false; $("hTip").hidden = true; hover = -1;
+    for (const n of [el.querySelector(".hl"), $("story")]) if (n) n.inert = true;
+    document.documentElement.style.overflow = "hidden"; document.body.classList.add("asking"); scrollTo(0, 0);
+    render(); step(0);
+  }
+  function closeYou() {
+    youV.hidden = true; el.classList.remove("asking");
+    for (const n of [el.querySelector(".hl"), $("story")]) if (n) n.inert = false;
+    document.documentElement.style.overflow = ""; document.body.classList.remove("asking");
+    if (!current()) { const s = SCENES[0]; Object.assign(S, { ref: true, salary: REF, invalid: false, pending: false, share: s.share, earners: s.earners }); $("salary").value = fmt(REF); $("share").value = s.share; }
+    render(); $("youBtn").focus();
+  }
+  $("youBtn").onclick = openYou;
+  $("youBack").onclick = closeYou;
+  $("youNext").onclick = next;
+  $("youPrev").onclick = () => step(Math.max(0, q - 1));
+  $("youRedo").onclick = () => step(0);
+  youV.addEventListener("keydown", e => {
+    if (e.key === "Escape") { e.stopPropagation(); closeYou(); return; }
+    if (e.key === "Enter" && e.target.tagName === "INPUT" && e.target.id !== "hFind") { e.preventDefault(); next(); }
+  });
+  $("hShare2").addEventListener("input", e => { $("share").value = e.target.value; $("share").dispatchEvent(new Event("input")); });
+  $("hEarn").onclick = e => { const bt = e.target.closest("button"); if (!bt) return; S.earners = +bt.dataset.v; render(); step(3); };
+  $("hSteps").onclick = e => { const bt = e.target.closest("button"); if (!bt) return; const s = SCENES[+bt.dataset.i]; Object.assign(S, { ref: true, salary: REF, invalid: false, share: s.share, earners: s.earners }); $("salary").value = fmt(REF); $("share").value = s.share; render(); };
+  $("hSalary").addEventListener("input", e => { $("salary").value = e.target.value; $("salary").dispatchEvent(new Event("input")); });
+  $("hShare").addEventListener("input", e => { Object.assign(S, { ref: true, salary: REF, invalid: false }); $("salary").value = fmt(REF); $("share").value = e.target.value; $("share").dispatchEvent(new Event("input")); });
+  $("hFind").addEventListener("keydown", e => {
+    if (e.key !== "Enter") return; e.preventDefault();
+    const raw = e.target.value.trim(), m = D.municipalities.find(z => norm(z.name) === norm(raw));
+    $("hFindMsg").textContent = m || !raw ? "" : `No hay ningún municipio llamado «${raw}» en la Comunidad de Madrid.`;
+    if (m) go(m.ine);
+  });
+  $("hFind").addEventListener("change", e => { const m = D.municipalities.find(z => norm(z.name) === norm(e.target.value)); if (m) go(m.ine); });
+  $("toMap").onclick = () => go(null);
+  addEventListener("resize", kick);
+  return { paint, show, go, state: () => ({ visible: !el.hidden, running, hits: hits.length, first: hits.slice(0, 3) }) };
+})();
+$("toHome").onclick = () => home.show();
+document.addEventListener("click", e => { const a = e.target.closest("[data-story-map]"); if (a) { e.preventDefault(); home.go(null); } });
+window.dondeCabes.home = home;
+
+function applyHash() {
+const h = new URLSearchParams(location.hash.slice(1));
+if (h.get("s") === "ref") { S.ref = true; $("salary").value = fmt(REF); }
+else if (h.has("s")) { $("salary").value = h.get("s"); const v = parseSalary(h.get("s")); if (v > 0) S.salary = v; else S.invalid = true; }
+const hp = Number(h.get("p"));
+if (Number.isInteger(hp) && hp >= 10 && hp <= 60) { S.share = hp; $("share").value = hp; }
+if (h.get("n") === "2") S.earners = 2;
+render();
+if (h.get("m")) openCard(h.get("m"), false);
+}
+if (!location.hash.slice(1)) { $("home").hidden = false; document.body.classList.add("onhome"); S.ref = true; $("salary").value = fmt(REF); requestAnimationFrame(t => home.show()); }
+applyHash();
+addEventListener("hashchange", () => { if (tour >= 0) hideTour(false); applyHash(); });
+})();
+</script>
+<!--__STORY_JS__-->
+</body>
+</html>
