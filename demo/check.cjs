@@ -285,6 +285,11 @@ const ok = (c, msg) => { console.log((c ? "PASS " : "FAIL ") + msg); if (!c) fai
   const H = () => page.evaluate(() => window.dondeCabes.home.state());
   const hN = () => page.textContent("#hN");
   await page.setViewportSize({ width: 1920, height: 1080 }); await page.goto("about:blank"); await page.goto(url); await page.waitForTimeout(2600);
+  const cov = await page.evaluate(() => ({ c: window.dondeCabes.home.state().cover, o: getComputedStyle(document.getElementById("hN").parentNode).opacity, sr: document.getElementById("hN").parentNode.getAttribute("aria-hidden") }));
+  ok(cov.c && cov.o === "0" && cov.sr === null, "C cover first: only the masthead and «descubre»; numbers stay in the page for screen readers");
+  await page.screenshot({ path: out + "/1920-cover.png" });
+  await page.keyboard.press("ArrowDown"); await page.waitForTimeout(1500);
+  ok(!(await H()).cover && await page.evaluate(() => scrollY) === 0 && await page.evaluate(() => document.activeElement.dataset.i) === "0", "C first key reveals without scrolling, focus on the average person");
   ok((await H()).visible && await hN() === String(R30.affordable_count) && (await page.textContent("#hSay")).includes(`En ${R30.affordable_detached_count} de ellos el dato es solo de casas unifamiliares`), `H home opens with the average person: ${R30.affordable_count}, ${R30.affordable_detached_count} detached`);
   ok(!(await H()).running, "H drawing stops when nothing moves");
   await page.screenshot({ path: out + "/1920-home.png" });
@@ -339,6 +344,11 @@ const ok = (c, msg) => { console.log((c ? "PASS " : "FAIL ") + msg); if (!c) fai
   await page.emulateMedia({ reducedMotion: "no-preference" });
   for (const [w, h] of [[1280, 720], [390, 844]]) {
     await page.setViewportSize({ width: w, height: h }); await page.goto("about:blank"); await page.goto(url); await page.waitForTimeout(2600);
+    const tt = await page.evaluate(() => { const r = document.querySelector(".ctitle").getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth + 1; });
+    ok(tt, `C ${w}: masthead fits the width`);
+    await page.screenshot({ path: `${out}/${w}-cover.png` });
+    await page.mouse.move(w / 2, h / 2); await page.mouse.wheel(0, 200); await page.waitForTimeout(1500);
+    ok(!(await H()).cover && await page.evaluate(() => scrollY) === 0, `C ${w}: first wheel reveals, does not scroll`);
     const g = await page.evaluate(() => { const r = s => document.querySelector(s).getBoundingClientRect(); return { cv: r("#ridge").height, sw: document.getElementById("home").scrollWidth, vw: innerWidth, fs: parseFloat(getComputedStyle(document.getElementById("hSay")).fontSize) }; });
     ok(g.cv >= 250 && g.sw <= g.vw + 1, `H ${w}: relief ${g.cv | 0} px tall, no sideways scroll`);
     await page.screenshot({ path: `${out}/${w}-home.png`, fullPage: false });
