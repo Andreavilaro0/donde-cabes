@@ -1367,7 +1367,8 @@ if (h.get("n") === "2") S.earners = 2;
 render();
 if (h.get("m")) openCard(h.get("m"), false);
 }
-if (!location.hash.slice(1)) { $("home").hidden = false; document.body.classList.add("onhome"); S.ref = true; $("salary").value = fmt(REF); home.cover(); requestAnimationFrame(t => home.show(false)); }
+// The app writes the reference state into the URL by itself, so a reload must still open the cover.
+if (["", "#s=ref&p=30"].includes(location.hash)) { $("home").hidden = false; document.body.classList.add("onhome"); S.ref = true; $("salary").value = fmt(REF); home.cover(); requestAnimationFrame(t => home.show(false)); }
 applyHash();
 addEventListener("hashchange", () => { if (tour >= 0) hideTour(false); applyHash(); });
 })();
