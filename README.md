@@ -1,8 +1,10 @@
 # ¿Dónde cabes?
 
+**UDIT · Equipo 34 · DataMad 2026**. Presentaciones: [entrega (PDF)](presentacion/entrega-DataMad.pdf), [exposición (PDF)](presentacion/presentacion.pdf), [exposición animada (HTML, descargar y abrir)](presentacion/presentacion.html). Las capturas de la exposición muestran el diseño claro, en desarrollo.
+
 Proyecto para DataMad 2026. Escribes tu sueldo bruto anual y la parte que dedicarías al alquiler, y el mapa enseña en cuáles de los 179 municipios de la Comunidad de Madrid entra el alquiler mediano. En cada municipio se ven centros de salud, farmacias, colegios, transporte, deporte, cultura y parques, donde la fuente tiene dato.
 
-Integrantes: nombres pendientes. Aplicación: https://andreavilaro0.github.io/donde-cabes/
+Integrantes: Andrea Àvila Rodriguez, Marcos Jiménez González, Lucas Henrique Silva de Carvalho, Daniel Cals Antón, Rodrigo García Sánchez. Aplicación: https://andreavilaro0.github.io/donde-cabes/
 
 ## Resultado con el sueldo de referencia
 

@@ -414,6 +414,11 @@ const ok = (c, msg) => { console.log((c ? "PASS " : "FAIL ") + msg); if (!c) fai
     const g = await page.evaluate(() => { const r = s => document.querySelector(s).getBoundingClientRect(); return { cv: r("#ridge").height, sw: document.getElementById("home").scrollWidth, vw: innerWidth, fs: parseFloat(getComputedStyle(document.getElementById("hSay")).fontSize) }; });
     ok(g.cv >= 250 && g.sw <= g.vw + 1, `H ${w}: relief ${g.cv | 0} px tall, no sideways scroll`);
     await page.screenshot({ path: `${out}/${w}-home.png`, fullPage: false });
+    await page.click("#youBtn"); await page.waitForTimeout(700);
+    const leak = await page.evaluate(() => [".ctitle", ".hbig", "#hSay", "#hSteps", "#hShare", "#youBtn", ".hnote", ".cgo"].filter(s => [...document.querySelectorAll(s)].some(e => { const r = e.getBoundingClientRect(), cs = getComputedStyle(e); return r.width > 0 && r.height > 0 && cs.visibility !== "hidden" && +cs.opacity > 0.05; })));
+    ok(leak.length === 0, `U ${w}: nothing from the home shows through the open form: ${JSON.stringify(leak)}`);
+    await page.screenshot({ path: `${out}/${w}-form.png` });
+    await page.keyboard.press("Escape"); await page.waitForTimeout(400);
   }
   await page.setViewportSize({ width: 1920, height: 1080 });
   const broken = path.join(out, "broken.html");
