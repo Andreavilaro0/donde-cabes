@@ -142,7 +142,7 @@
   body.asking > #story { visibility:hidden; }
   #home.asking .hl, #home.asking .htip { display:none; }
   .ctitle, .cgo { display:none; }
-  #home.cover .ctitle { display:block; position:absolute; z-index:0; left:0; right:0; top:clamp(28px,6vh,72px); text-align:center; font:800 min(13.6vw,30vh)/.84 var(--cond); text-transform:uppercase; letter-spacing:.01em; white-space:nowrap; color:var(--ink); animation:cin .9s var(--ease) both; }
+  #home.cover .ctitle { display:block; position:absolute; z-index:0; left:0; right:0; top:clamp(28px,6vh,72px); text-align:center; font:800 min(13.6vw,30vh)/.84 var(--cond); text-transform:uppercase; letter-spacing:-.01em; white-space:nowrap; color:var(--ink); animation:cin .9s var(--ease) both; }
   #home.cover .ctitle br { display:none; }
   #home.cover .cgo { display:block; position:absolute; z-index:2; left:50%; bottom:clamp(14px,3vh,36px); transform:translateX(-50%); min-height:52px; padding:.3em 1.1em; border:1px solid var(--edge); border-radius:999px; background:rgb(8 18 28 / .8); color:var(--ink); font-size:var(--fs); cursor:pointer; animation:cin .6s 1.6s var(--ease) both; }
   #home.cover .hl > *, #home.cover .hnote { opacity:0; pointer-events:none; }
@@ -176,7 +176,7 @@
   .ask { pointer-events:auto; max-width:min(64em,100%); margin:0 auto; display:flex; flex-direction:column; align-items:center; text-align:center; gap:clamp(10px,1.8vh,22px); }
   .ask .q { display:flex; flex-direction:column; align-items:center; gap:clamp(10px,1.6vh,20px); width:100%; }
   .askStep { color:var(--ink2); font-size:var(--fs-s); letter-spacing:.04em; }
-  .askQ { font:800 clamp(36px,4.4vw,88px)/.95 var(--cond); margin:0; text-wrap:balance; }
+  .askQ { font:800 clamp(36px,4.4vw,88px)/.95 var(--cond); letter-spacing:-.015em; margin:0; text-wrap:balance; }
   #hSalary { width:7.5em; font:700 clamp(36px,3.4vw,68px)/1 var(--cond); text-align:center; padding:.15em .3em; border:2px solid var(--ink2); background:rgb(16 32 46 / .92); border-radius:8px; }
   #hSalary::placeholder { color:#7D8AA3; font:italic 500 clamp(20px,1.5vw,30px)/1 "Avenir Next","Segoe UI",system-ui,sans-serif; }
   .askRange { display:flex; align-items:center; gap:.6em; width:min(36em,100%); }
@@ -240,6 +240,55 @@
     .legend { grid-column:1 / -1; }
   }
   @media (prefers-reduced-motion:reduce) { .m, #tip { transition:none !important; } }
+  /* Controles con tacto iOS: radio 14 px, 44 px mínimos, pastilla #ffcf4a */
+  :root { --r:14px; --spring:linear(0, .23 7%, .6 18%, .84 30%, .95 42%, .99 56%, 1); --glass:rgb(12 24 36 / .72); }
+  button, a.out, input[type=text] { border-radius:var(--r) !important; -webkit-tap-highlight-color:transparent; }
+  button, a.out { transition:transform .18s var(--spring), background-color .15s, border-color .15s, color .15s; }
+  button:active:not(:disabled), a.out:active { transform:scale(.96); transition-duration:.08s; }
+  button:focus:not(:focus-visible), input:focus:not(:focus-visible) { outline:none; }
+  :focus-visible { outline:3px solid var(--ink); outline-offset:3px; }
+  .cta, .askNav .cta { background:var(--water); color:#08121C; border:0; font-weight:700; box-shadow:0 1px 0 rgb(255 255 255 / .35) inset, 0 6px 18px rgb(255 207 74 / .18); }
+  .cta:active { background:#F0BE2E; }
+  input[type=text] { min-height:52px; border:1px solid var(--edge); background:var(--raise); transition:border-color .15s, box-shadow .15s; }
+  input[type=text]:focus { border-color:var(--water); box-shadow:0 0 0 4px rgb(255 207 74 / .18); outline:none; }
+  input[type=text][aria-invalid="true"] { border-color:var(--coral); box-shadow:0 0 0 4px rgb(255 138 101 / .18); }
+  .segc { position:relative; display:inline-grid; grid-auto-flow:column; grid-auto-columns:auto; justify-self:start; justify-content:start; width:max-content; max-width:100%; gap:0 !important; padding:4px; border-radius:calc(var(--r) + 4px); background:#0E1B28; border:1px solid var(--line); isolation:isolate; }
+  .segc > button { position:relative; z-index:1; min-height:44px; border:0 !important; background:transparent !important; color:var(--ink); font-weight:600; padding:.3em 1em; white-space:nowrap; transition:color .25s, transform .18s var(--spring); }
+  .segc > button[aria-pressed="true"] { color:#08121C; font-weight:700; }
+  .segc > .pill { position:absolute; z-index:0; top:4px; bottom:4px; left:0; width:0; border-radius:var(--r); background:var(--water); box-shadow:0 2px 10px rgb(0 0 0 / .35); transition:transform .45s var(--spring), width .45s var(--spring), opacity .2s; pointer-events:none; }
+  .segc > .pill.off { opacity:0; }
+  @media (max-width:560px) { .segc { max-width:calc(100vw - 36px); } .segc > button { white-space:normal; padding:.3em .55em; line-height:1.15; } }
+  /* Entradas desde los lados: muelle críticamente amortiguado, solo transform y opacity, todo asentado antes de 900 ms */
+  @keyframes fromL { from { opacity:0; transform:translateX(-56px); } }
+  @keyframes fromR { from { opacity:0; transform:translateX(56px); } }
+  @keyframes fromB { from { opacity:0; transform:translateY(40px); } }
+  #home.enter .hl > * { animation:fromL .62s cubic-bezier(.22,1,.36,1) both; }
+  #home.enter .hl > :nth-child(2) { animation-delay:.04s; } #home.enter .hl > :nth-child(3) { animation-delay:.09s; } #home.enter .hl > :nth-child(4) { animation-delay:.14s; }
+  #home.enter .hctl > * { animation:fromL .62s .19s cubic-bezier(.22,1,.36,1) both; }
+  #home.enter .hctl > :nth-child(2), #home.enter .hctl > :nth-child(3) { animation-delay:.23s; } #home.enter .hctl > :nth-child(4) { animation-delay:.27s; }
+  #home.enter .hnote { animation:fromR .62s .2s cubic-bezier(.22,1,.36,1) both; }
+  .ask .q:not([hidden]) { animation:fromR .5s cubic-bezier(.22,1,.36,1) both; }
+  .ask .askStep { animation:none; }
+  body:not(.onhome) > aside { animation:fromL .6s cubic-bezier(.22,1,.36,1) both; }
+  body:not(.onhome) .legend { animation:fromB .6s .12s cubic-bezier(.22,1,.36,1) both; }
+  #card:not([hidden]) { animation:fromL .5s cubic-bezier(.22,1,.36,1) both; }
+  @media (max-width:820px), (max-height:640px) { #place:not([hidden]) { animation:fromB .45s cubic-bezier(.22,1,.36,1) both; } }
+  @media (prefers-reduced-motion:reduce) {
+    #home.enter .hl > *, #home.enter .hctl > *, #home.enter .hnote, .ask .q:not([hidden]), body:not(.onhome) > aside, body:not(.onhome) .legend, #card:not([hidden]), #place:not([hidden]) { animation:none; }
+  }
+  input[type=range] { -webkit-appearance:none; appearance:none; height:44px; background:transparent; cursor:pointer; --p:50%; }
+  input[type=range]::-webkit-slider-runnable-track { height:8px; border-radius:4px; background:linear-gradient(90deg, var(--water) var(--p), #2A3650 var(--p)); }
+  input[type=range]::-moz-range-track { height:8px; border-radius:4px; background:#2A3650; }
+  input[type=range]::-moz-range-progress { height:8px; border-radius:4px; background:var(--water); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:28px; height:28px; margin-top:-10px; border-radius:50%; background:#fff; box-shadow:0 1px 2px rgb(0 0 0 / .4), 0 4px 12px rgb(0 0 0 / .35); transition:transform .2s var(--spring); }
+  input[type=range]::-moz-range-thumb { width:28px; height:28px; border:0; border-radius:50%; background:#fff; box-shadow:0 1px 2px rgb(0 0 0 / .4), 0 4px 12px rgb(0 0 0 / .35); }
+  input[type=range]:active::-webkit-slider-thumb { transform:scale(1.18); }
+  input[type=range]:focus-visible { outline-offset:2px; }
+  #place, .htip, #tip { background:var(--glass); -webkit-backdrop-filter:blur(18px) saturate(160%); backdrop-filter:blur(18px) saturate(160%); border-color:rgb(255 255 255 / .12); border-radius:var(--r); }
+  #list button, #plist button { border-radius:0 !important; }
+  @media (prefers-contrast:more) { #place, .htip, #tip { background:#000; backdrop-filter:none; -webkit-backdrop-filter:none; border-color:var(--ink); } .segc, input[type=text], button { border-color:var(--ink) !important; } }
+  @media (prefers-reduced-transparency:reduce) { #place, .htip, #tip { background:#05080F; -webkit-backdrop-filter:none; backdrop-filter:none; } }
+  @media (prefers-reduced-motion:reduce) { button, a.out, .segc > .pill, input[type=range]::-webkit-slider-thumb { transition:none !important; } button:active, a.out:active { transform:none !important; } }
 </style>
 <style>/*__STORY_CSS__*/</style>
 </head>
@@ -250,7 +299,7 @@
     <h1 class="htitle">¿Dónde<br>cabes?</h1>
     <p class="hbig" aria-live="polite"><b id="hN">0</b><span id="hSay"></span></p>
     <div class="hctl">
-      <div class="full" id="hSteps" role="group" aria-label="La persona media de 26 a 35 años"><button type="button" data-i="0">Persona media, 30&nbsp;%</button><button type="button" data-i="1">Al 40&nbsp;%</button><button type="button" data-i="2">Con dos sueldos</button></div>
+      <div class="full segc" id="hSteps" role="group" aria-label="La persona media de 26 a 35 años"><button type="button" data-i="0">Persona media, 30&nbsp;%</button><button type="button" data-i="1">Al 40&nbsp;%</button><button type="button" data-i="2">Con dos sueldos</button></div>
       <label for="hShare">Para el alquiler: <span id="hShareOut">30 %</span></label><input type="range" id="hShare" min="10" max="60" step="1" value="30">
       <button type="button" class="full cta" id="youBtn">¿Y tú? Calcula dónde cabes</button>
     </div>
@@ -270,7 +319,7 @@
       </div>
       <fieldset class="q" data-q="2" hidden>
         <legend class="askQ">¿Cuántos sueldos entran en casa?</legend>
-        <div class="seg askEarn" id="hEarn"><button type="button" data-v="1" aria-pressed="true">Uno, el mío</button><button type="button" data-v="2" aria-pressed="false">Dos iguales</button></div>
+        <div class="segc askEarn" id="hEarn" role="group" aria-label="Sueldos en casa"><button type="button" data-v="1" aria-pressed="true">Uno, el mío</button><button type="button" data-v="2" aria-pressed="false">Dos iguales</button></div>
       </fieldset>
       <div class="q askOut" data-q="3" hidden>
         <p class="askBig" id="youRes"></p>
@@ -316,7 +365,7 @@
   </div>
   <fieldset>
     <legend>Sueldos en casa</legend>
-    <div class="seg row" id="earners">
+    <div class="segc" id="earners">
       <button type="button" data-v="1" aria-pressed="true">Uno</button>
       <button type="button" data-v="2" aria-pressed="false">Dos iguales</button>
     </div>
@@ -461,6 +510,18 @@ function countTo(el, n) {
   requestAnimationFrame(step);
 }
 
+function pills() {
+  for (const g of document.querySelectorAll(".segc")) {
+    let pl = g.querySelector(".pill");
+    if (!pl) { pl = document.createElement("span"); pl.className = "pill"; pl.setAttribute("aria-hidden", "true"); g.prepend(pl); }
+    const b = g.querySelector('button[aria-pressed="true"]');
+    pl.classList.toggle("off", !b);
+    if (b && b.offsetWidth) { pl.style.width = b.offsetWidth + "px"; pl.style.transform = `translateX(${b.offsetLeft}px)`; }
+  }
+  for (const r of document.querySelectorAll('input[type=range]')) r.style.setProperty("--p", (r.value - r.min) / (r.max - r.min) * 100 + "%");
+}
+addEventListener("resize", () => pills());
+document.addEventListener("input", e => { if (e.target.type === "range") pills(); });
 function render() {
   const c = current();
   $("ref").setAttribute("aria-pressed", String(S.ref));
@@ -507,6 +568,7 @@ function render() {
   renderList(c, fits);
   if (S.sel) renderCard();
   home.paint();
+  requestAnimationFrame(pills);
 }
 
 let lastFits = new Set();
@@ -925,7 +987,7 @@ const home = (() => {
   }
   function reveal() {
     if (!el.classList.contains("cover")) return;
-    el.classList.remove("cover"); document.documentElement.style.overflow = ""; revealedAt = performance.now(); shownN = null; paint(); kick();
+    el.classList.remove("cover", "enter"); void el.offsetWidth; el.classList.add("enter"); document.documentElement.style.overflow = ""; revealedAt = performance.now(); shownN = null; paint(); kick();
   }
   const coverKey = e => { if (!el.classList.contains("cover") || el.hidden) return; if (["Shift", "Control", "Alt", "Meta"].includes(e.key)) return; e.preventDefault(); reveal(); $("hSteps").querySelector("button").focus({ preventScroll: true }); };
   addEventListener("keydown", coverKey, true);
@@ -948,9 +1010,9 @@ const home = (() => {
     if (reduced.matches) return done();
     el.classList.add("leaving"); if (story) story.classList.add("leaving"); setTimeout(done, 450);
   }
-  function show() {
-    closeCard(false); el.hidden = false; document.body.classList.add("onhome"); scrollTo(0, 0); born = performance.now(); lit.fill(0); shownN = null; paint(); kick();
-    (el.classList.contains("cover") ? $("coverGo") : $("hSteps").querySelector("button")).focus({ preventScroll: true });
+  function show(focus = true) {
+    closeCard(false); el.hidden = false; document.body.classList.add("onhome"); if (!el.classList.contains("cover")) { el.classList.remove("enter"); void el.offsetWidth; el.classList.add("enter"); } scrollTo(0, 0); born = performance.now(); lit.fill(0); shownN = null; paint(); kick();
+    if (focus) (el.classList.contains("cover") ? $("coverGo") : $("hSteps").querySelector("button")).focus({ preventScroll: true });
   }
   let nAnim = 0;
   function paint() {
@@ -976,7 +1038,7 @@ const home = (() => {
   const youV = $("youView"), QS = [...youV.querySelectorAll(".q")];
   let q = 0;
   function step(i) {
-    q = i; el.dataset.q = i; kick();
+    q = i; el.dataset.q = i; kick(); requestAnimationFrame(pills);
     QS.forEach((d, j) => { d.hidden = j !== q; });
     $("youStep").textContent = q < 3 ? `Pregunta ${q + 1} de 3` : "Tu resultado";
     $("youPrev").hidden = q === 0 || q === 3; $("youNext").hidden = q === 3;
@@ -1043,7 +1105,7 @@ if (h.get("n") === "2") S.earners = 2;
 render();
 if (h.get("m")) openCard(h.get("m"), false);
 }
-if (!location.hash.slice(1)) { $("home").hidden = false; document.body.classList.add("onhome"); S.ref = true; $("salary").value = fmt(REF); home.cover(); requestAnimationFrame(t => home.show()); }
+if (!location.hash.slice(1)) { $("home").hidden = false; document.body.classList.add("onhome"); S.ref = true; $("salary").value = fmt(REF); home.cover(); requestAnimationFrame(t => home.show(false)); }
 applyHash();
 addEventListener("hashchange", () => { if (tour >= 0) hideTour(false); applyHash(); });
 })();
