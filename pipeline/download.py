@@ -3,6 +3,7 @@
 Usage: python3 -I pipeline/download.py            first snapshot
        python3 -I pipeline/download.py contours   outlines in their native reference system
        python3 -I pipeline/download.py province   rent, services, transport and terrain for the whole region
+       python3 -I pipeline/download.py dogs       dog areas and veterinary centres
 Existing files are never overwritten.
 """
 
@@ -11,6 +12,7 @@ import hashlib
 import json
 import re
 import sys
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -44,7 +46,8 @@ CAPABILITIES_URL = "https://idem.comunidad.madrid/geoidem/ows?service=WFS&versio
 def fetch(url):
     for attempt in (1, 2):
         try:
-            with urllib.request.urlopen(url, timeout=180) as response:
+            request = urllib.request.Request(url, headers={"User-Agent": "DataMad2026-UDIT/1.0"})
+            with urllib.request.urlopen(request, timeout=180) as response:
                 return response.read()
         except OSError as error:
             print(f"attempt {attempt} failed: {url}: {error}")
@@ -166,6 +169,41 @@ def province():
     print(f"manifest: {len(files)} files")
 
 
+DOGS = Path(__file__).resolve().parent.parent / "datos/snapshots/2026-11-26-perro"
+MADRID = "https://datos.madrid.es/api/3/action/package_show?id=300094-0-areas-caninas"
+OVERPASS = "https://overpass-api.de/api/"
+# Only the tags the map shows: no telephone, e-mail, web or owner is ever asked for.
+OVERPASS_QUERY = ('[out:csv(::type,::id,::lat,::lon,"amenity","leisure","access","name","addr:street",'
+                  '"addr:housenumber";true;"\\t")][timeout:150];'
+                  'area["ISO3166-2"="ES-MD"]["boundary"="administrative"]->.region;'
+                  '(nwr["leisure"="dog_park"](area.region);nwr["amenity"="veterinary"](area.region););out center;')
+
+
+def dogs():
+    """Dog areas and veterinary centres from open sources, approved by Andrea on 26 November."""
+    DOGS.mkdir(parents=True, exist_ok=True)
+    manifest = DOGS / "MANIFIESTO.json"
+    if manifest.exists():
+        raise SystemExit("MANIFIESTO.json already exists, left untouched")
+    answer = fetch(MADRID)
+    package = json.loads(answer)["result"]
+    resource = next(r for r in package["resources"] if r["name"] == "300094-2-areas-caninas" and r["format"] == "CSV")
+    terms = {"url": MADRID, "read": datetime.datetime.now().astimezone().isoformat(timespec="seconds"),
+             "sha256": hashlib.sha256(answer).hexdigest(),
+             **{k: package.get(k) for k in ("title", "license_id", "license_title", "license_url", "metadata_modified")}}
+    madrid = {"id": "ayto-areas-caninas", "title": "Áreas caninas (Ayuntamiento de Madrid)",
+              "license": package["license_title"],
+              **save("areas-caninas.csv", resource["url"], DOGS),
+              "page": "https://datos.madrid.es/dataset/300094-0-areas-caninas", "declared_by_service": terms}
+    query = urllib.parse.urlencode({"data": OVERPASS_QUERY})
+    osm = {"id": "osm-perro", "title": "Zonas caninas y veterinarios de la Comunidad de Madrid (OpenStreetMap)",
+           "license": "ODbL 1.0, © OpenStreetMap",
+           **save("osm-perro.tsv", f"{OVERPASS}interpreter?{query}", DOGS),
+           "page": "https://www.openstreetmap.org/copyright", "query": OVERPASS_QUERY,
+           "declared_by_service": {"url": OVERPASS + "timestamp", "data_until": fetch(OVERPASS + "timestamp").decode().strip()}}
+    manifest.write_text(json.dumps({"files": [madrid, osm]}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+
+
 def main():
     SNAPSHOT.mkdir(parents=True, exist_ok=True)
     files, failed = [], []
@@ -198,4 +236,4 @@ def main():
 
 
 if __name__ == "__main__":
-    {"contours": contours, "province": province}.get(" ".join(sys.argv[1:]), main)()
+    {"contours": contours, "province": province, "dogs": dogs}.get(" ".join(sys.argv[1:]), main)()

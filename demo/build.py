@@ -125,11 +125,14 @@ def main():
     subprocess.run([sys.executable, "-I", str(story / "build.py")], check=True)
     scripts = [f.read_text(encoding="utf-8") for f in
                (HERE / "vendor/gsap.min.js", HERE / "vendor/ScrollTrigger.min.js", story / "story.js")]
-    if any("</script" in s.lower() for s in scripts):
+    vendor = [(HERE / f"vendor/{n}").read_text(encoding="utf-8") for n in ("maplibre-gl.js", "motion.js")]
+    if any("</script" in s.lower() for s in scripts + vendor):
         sys.exit("a script contains </script")
     parts = {"<!--__STORY__-->": (story / "story.built.html").read_text(encoding="utf-8"),
              "/*__STORY_CSS__*/": (story / "story.css").read_text(encoding="utf-8"),
              "<!--__STORY_JS__-->": "".join(f"<script>{s}</script>\n" for s in scripts),
+             "/*__MAPLIBRE_CSS__*/": (HERE / "vendor/maplibre-gl.css").read_text(encoding="utf-8"),
+             "<!--__MATCH__-->": "".join(f"<script>{s}</script>\n" for s in vendor) + (HERE / "match/match.built.html").read_text(encoding="utf-8"),
              "__DATA__": blob}
     for key in parts:
         if template.count(key) != 1:

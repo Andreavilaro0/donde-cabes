@@ -27,7 +27,7 @@ FIELD = {"rent": "alquiler mediano por municipio", "rent_regional": "alquiler me
          "health_centres": "centros de salud y consultorios", "pharmacies": "farmacias", "schools": "colegios e institutos",
          "sports": "instalaciones deportivas", "cultural": "centros culturales", "parks": "parques y zonas recreativas",
          "bus_stops": "paradas de autobús interurbano", "metro_stations": "estaciones de metro", "rail_stations": "estaciones de Cercanías",
-         "light_rail_stops": "paradas de metro ligero y tranvía"}
+         "light_rail_stops": "paradas de metro ligero y tranvía", "vets": "centros veterinarios", "dog_areas": "áreas caninas"}
 use, years = {}, {}
 for t in towns:
     for k, v in [*((k, t[k]) for k in t if isinstance(t[k], dict) and k != "around"), *t["around"].items()]:
@@ -42,6 +42,8 @@ use.setdefault("relieve-ign-200", set()).add("terrain"); FIELD["terrain"] = "alt
 
 def publisher(k, s):
     if k.startswith("crtm"): return "Consorcio Regional de Transportes de Madrid"
+    if "datos.madrid.es" in s["url"]: return "Ayuntamiento de Madrid"
+    if "openstreetmap.org" in s["url"]: return "Colaboradores de OpenStreetMap"
     if "mivau" in s["url"]: return "Ministerio de Vivienda y Agenda Urbana"
     if "idee.es" in s["url"]: return "Instituto Geográfico Nacional"
     if "comunidad.madrid" in s["url"]: return "Comunidad de Madrid"
@@ -52,7 +54,7 @@ def year(k):
 
 boxes = []
 for n, (k, s) in enumerate(src.items(), 1):
-    what = "; ".join(FIELD[f] for f in sorted(use.get(k, []), key=list(FIELD).index)) or "pendiente"
+    what = "; ".join(FIELD.get(f, f) for f in sorted(use.get(k, []), key=lambda f: list(FIELD).index(f) if f in FIELD else len(FIELD))) or "pendiente"
     note = f'<p class="story-letter-note">{esc(s["note"])}</p>' if s.get("note") else ""
     boxes.append(f'''<li class="story-box">
 <div class="story-box-front" aria-hidden="true"><span class="story-box-plate">{n}</span><span class="story-box-slot"><span class="story-box-flap"></span></span><span class="story-box-key"></span></div>

@@ -1,0 +1,17 @@
+<section id="match" class="mt" hidden aria-labelledby="mt-title">
+  <div class="mt-map" id="mt-map" role="img" aria-label="Mapa de los municipios de la Comunidad de Madrid. Los encendidos cumplen lo que has marcado; la lista de al lado dice lo mismo en texto."></div>
+  <div class="mt-count" aria-live="polite" id="mt-count"></div>
+  <aside class="mt-panel" id="mt-panel">
+    <button type="button" class="mt-grip" aria-expanded="true" aria-label="Subir o bajar la lista"><span></span></button>
+    <header class="mt-head">
+      <button type="button" class="mt-back" id="mt-back">Volver</button>
+      <button type="button" class="mt-undo" id="mt-undo" disabled>Deshacer</button>
+    </header>
+    <h2 id="mt-title" tabindex="-1">Marca lo que necesitas y el mapa se va cerrando</h2>
+    <p class="mt-rule">Se queda un municipio si su alquiler mediano cabe en tu tope y tiene al menos uno de cada cosa que marques. Lo que no sabemos va aparte, sin contar como sí ni como no.</p>
+    <ol class="mt-steps" id="mt-steps"></ol>
+    <div class="mt-result" id="mt-result" tabindex="-1"></div>
+    <details class="mt-unknown" id="mt-unknown"><summary></summary><ul></ul></details>
+    <footer class="mt-credits" id="mt-credits"></footer>
+  </aside>
+</section>

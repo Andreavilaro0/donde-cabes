@@ -23,6 +23,8 @@ OUTPUT = ROOT / "demo/data"
 CONTOURS = ROOT / "datos/snapshots/2026-11-25-contornos-25830"
 DECIMALS = 6
 PROVINCE = ROOT / "datos/snapshots/2026-11-26-provincia"
+DOGS = ROOT / "datos/snapshots/2026-11-26-perro"
+MADRID_DOGS, OSM, MADRID = "ayto-areas-caninas", "osm-perro", "28079"
 
 RENT = "alquiler_medio_mensual_viviendas_arrendadas_valor_catastral_municipios_mas_20000"
 SALARY = "perceptores_salarios_por_edad_nacionalidad_y_sexo"
@@ -38,7 +40,16 @@ HEALTH_TYPES = ("Centro de salud", "Consultorio de atención primaria")
 SCHOOL_CODES = ("012", "013", "014", "015", "016", "017", "042", "045", "070", "072", "073", "074")
 STATIONS = {"metro_stations": "crtm-metro", "rail_stations": "crtm-cercanias", "light_rail_stops": "crtm-metro-ligero"}
 IDEM = {"sports": "idem-deporte", "cultural": "idem-cultura", "parks": "idem-parques"}
-LAYERS = ("health_centres", "pharmacies", "schools", "sports", "cultural", "parks", "bus_stops", *STATIONS)
+LAYERS = ("health_centres", "pharmacies", "schools", "sports", "cultural", "parks", "bus_stops", *STATIONS,
+          "dog_areas", "vets")
+# OpenStreetMap veterinary names that are a person's name, read one by one on 26 November: only type and address.
+# ponytail: hand-made list for this download.
+PERSON_VETS = frozenset("""Almacén de Piensos Valentín Raposo e Hijos|Alonso Cano|Centro Veterinario Cardona
+|Centro Veterinario Finat|Centro veterinario General Arrando|Concha Vizcay|Consultorio Veterinario Pablo Neruda
+|Clínica Veterinaria Aaron|Clínica Veterinaria Del Val|Clínica Veterinaria Guzmán el Bueno|Clínica Veterinaria Saz
+|Clínica Veterinaria Unzeta|Clínica veterinaria Rafael Alberti|Veterinaria Joan Miró|Dr. Eugenio Cabezas
+|F. Gálvez Sánchez|Don Pedro|Godín|José del Hierro|Hospital Veterinario Alberto Alcocer|Hospital Veterinario Puchol
+|Rosa de Luxemburgo|Veterinaria Araceli Fernández|Veterinario Salvatierra""".replace("\n", "").split("|"))
 LEGAL_ID = r"[A-HJNP-SUVW]\d{7}[0-9A-J]"  # tax number of a company, order or association, never of a person
 # Private places whose name is a person's name, read one by one on 26 November: the map shows their type instead.
 # ponytail: hand-made list for this snapshot; a new download needs a new reading.
@@ -72,6 +83,12 @@ DEFINITIONS = {
                       "sin nombre, que cuenta como una.",
     "rail_stations": "Estaciones de Cercanías (una por nombre y municipio).",
     "light_rail_stops": "Paradas de metro ligero y tranvía (una por nombre y municipio).",
+    "dog_areas": "Zonas caninas. En Madrid capital, las municipales en servicio (Ayuntamiento de Madrid); en el resto, "
+                 "las dibujadas en OpenStreetMap sin acceso privado. OpenStreetMap está incompleto: un municipio sin "
+                 "dato no significa que no haya.",
+    "vets": "Centros veterinarios anotados en OpenStreetMap. La lista está incompleta: un municipio sin dato no "
+            "significa que no haya.",
+    "parks_for_dogs": "Los parques son los de la encuesta EIEL 2023: no consta si admiten perros ni en qué horario.",
 }
 
 EARLY_YEARS = ("nurseries", "private_early_centres")
@@ -397,6 +414,36 @@ def read_places(folder, schools_folder, names):
     return out, covered
 
 
+def read_dogs(folder, shapes):
+    """{layer: [(ine, point, info)]} for dog areas and vets, and the municipalities each one says something about."""
+    out = {"dog_areas": [], "vets": []}
+    text = (folder / "areas-caninas.csv").read_bytes().decode("utf-8-sig")
+    for r in csv.DictReader(io.StringIO(text, newline=""), delimiter=";"):
+        if r["SISTEMA_COORD"] != "ETRS89":
+            raise ValueError(f"dog areas: unexpected reference system {r['SISTEMA_COORD']!r}")
+        if r["ESTADO"] == "OPERATIVO":
+            address = words(r["TIPO_VIA"], r["NOM_VIA"], r["NUM_VIA"])
+            out["dog_areas"].append((MADRID, point(r["COORD_GIS_X"], r["COORD_GIS_Y"]), (None, address, "Zona canina")))
+    boxes = {code: [f(axis) for axis in zip(*(p for ring in rings for p in ring)) for f in (min, max)]
+             for code, rings in shapes.items()}
+    text = (folder / "osm-perro.tsv").read_text(encoding="utf-8")
+    for r in csv.DictReader(io.StringIO(text, newline=""), delimiter="\t", quoting=csv.QUOTE_NONE):
+        vet = r["amenity"] == "veterinary"
+        if not vet and (r["leisure"] != "dog_park" or r["access"] in ("private", "no")):
+            continue
+        where = utm(float(r["@lon"]), float(r["@lat"]))
+        code = next((c for c, (west, east, south, north) in boxes.items() if west <= where[0] <= east
+                     and south <= where[1] <= north and inside(shapes[c], where)), None)
+        if code is None or (code == MADRID and not vet):
+            continue  # outside the region, or inside Madrid city where the council's own list is used
+        name = words(r["name"].strip('"').replace('""', '"'))
+        if vet and name in PERSON_VETS:
+            name = None
+        out["vets" if vet else "dog_areas"].append(
+            (code, where, (name, words(r["addr:street"], r["addr:housenumber"]), "Veterinario" if vet else "Zona canina")))
+    return out, {layer: {code for code, _, _ in found} for layer, found in out.items()}
+
+
 def inside(rings, where):
     x, y = where
     odd = False
@@ -428,11 +475,15 @@ def outlines(contours):
     return out
 
 
-def build_around(province, schools_folder, contours, names, years):
+def build_around(province, schools_folder, dogs, contours, names, years):
     found, covered = read_places(province, schools_folder, names)
     shapes = outlines(contours)
+    extra, extra_covered = read_dogs(dogs, shapes)
+    found.update(extra)
+    covered.update(extra_covered)
     sources = {"health_centres": HEALTH, "pharmacies": PHARMACIES, "schools": SCHOOLS,
-               "bus_stops": "crtm-bus-interurbano", **STATIONS, **IDEM}
+               "bus_stops": "crtm-bus-interurbano", **STATIONS, **IDEM, "dog_areas": OSM, "vets": OSM}
+    own = {("dog_areas", MADRID): MADRID_DOGS}
     around = {code: {} for code in names}
     places, without, outside = {}, {}, {}
     for key in LAYERS:
@@ -449,9 +500,11 @@ def build_around(province, schools_folder, contours, names, years):
             else:
                 points.setdefault(code, []).append([*(round(v, 5) for v in lon_lat(*where)), *info])
         for code in names:
+            source = own.get((key, code), sources[key])
             around[code][key] = None if code not in covered.get(key, names) else {
-                "value": counts[code], "year": years[sources[key]], "source": sources[key]}
+                "value": counts[code], "year": years[source], "source": source}
         places[key] = {"source": sources[key], "points": {c: sorted(points[c], key=str) for c in sorted(points)}}
+    places["dog_areas"]["other_sources"] = {code: source for (key, code), source in own.items()}
     return around, {"crs": "ETRS89 longitude, latitude",
                     "fields": ["longitude", "latitude", "name", "address", "extra"], "layers": places, "without_point": without,
                     "rule": f"a point is dropped when it is more than {NEAR} m outside its own municipality",
@@ -563,6 +616,22 @@ def province_sources(province):
     return out
 
 
+def dog_sources(folder):
+    out = {}
+    for entry in json.loads((folder / "MANIFIESTO.json").read_bytes())["files"]:
+        downloaded = entry["downloaded"][:10]
+        source = {"title": entry["title"], "url": entry["page"], "downloaded": downloaded, "sha256": entry["sha256"],
+                  "license": entry["license"]}
+        if entry["id"] == OSM:
+            until = entry["declared_by_service"]["data_until"][:10]
+            source.update(link=entry["page"], edition=until, credit=f"© OpenStreetMap (ODbL). Datos hasta el {day(until)}.",
+                          note="Lista incompleta, hecha por voluntarios. Las capas derivadas se comparten con la misma licencia.")
+        else:
+            source["credit"] = f"Origen de los datos: Ayuntamiento de Madrid, CC BY 4.0. Descargados el {day(downloaded)}."
+        out[entry["id"]] = source
+    return out
+
+
 def read_sources(folder, contours):
     manifest = [entry for place in (folder, contours)
                 for entry in json.loads((place / "MANIFIESTO.json").read_bytes())["files"]
@@ -606,14 +675,14 @@ def expected_cases(municipalities, yearly):
     return {"rule": "affordable if rent * 1200 <= annual_gross * share * earners", "cases": cases, "invalid": invalid}
 
 
-def build(folder, contours=CONTOURS, province=PROVINCE):
-    sources = {**read_sources(folder, contours), **province_sources(province)}
+def build(folder, contours=CONTOURS, province=PROVINCE, dogs=DOGS):
+    sources = {**read_sources(folder, contours), **province_sources(province), **dog_sources(dogs)}
     names, boundaries = read_boundaries(contours)
     rent = read_ministry_rent(province, names)
     regional = read_rent(folder, names)
     years = {ident: int(s.get("edition", s["downloaded"])[:4]) for ident, s in sources.items()}
     years.update(dict.fromkeys(IDEM.values(), 2023))
-    around, places = build_around(province, folder, contours, names, years)
+    around, places = build_around(province, folder, dogs, contours, names, years)
     population, children = read_population(folder, names)
     early = read_early_years(folder, names, int(sources[SCHOOLS]["downloaded"][:4]))
     grant, unassigned = read_grant(folder, names)

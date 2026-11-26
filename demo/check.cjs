@@ -15,7 +15,7 @@ const R30 = C.reference_30, R40 = C.reference_40, R2 = C.reference_two_salaries_
 let fail = 0;
 const ok = (c, msg) => { console.log((c ? "PASS " : "FAIL ") + msg); if (!c) fail++; };
 (async () => {
-  const b = await chromium.launch();
+  const b = await chromium.launch({ args: ["--use-angle=metal"] });
   const ctx = await b.newContext({ viewport: { width: 1920, height: 1080 } });
   const page = await ctx.newPage();
   page.setDefaultTimeout(3000);
@@ -331,14 +331,18 @@ const ok = (c, msg) => { console.log((c ? "PASS " : "FAIL ") + msg); if (!c) fai
   const st = await page.evaluate(() => { const s = document.getElementById("story"); return { shown: !!s && s.offsetHeight > 2000, scroll: document.documentElement.scrollHeight > innerHeight * 3 }; });
   ok(st.shown && st.scroll, "S the story sits under the home and the page scrolls");
   await page.click(".story-go"); await page.waitForTimeout(800);
-  ok(!(await H()).visible && await page.isVisible("#map") && !(await page.evaluate(() => location.hash.includes("map"))), "S the story door opens the map");
-  await page.click("#toHome"); await page.waitForTimeout(400);
+  ok(await page.isVisible("#match") && !(await page.evaluate(() => location.hash.includes("map"))), "S the story door opens the map with the list");
+  await page.evaluate(() => window.dondeCabes.closeMatch()); await page.waitForTimeout(400);
+  ok(!(await page.isVisible("#match")) && (await H()).visible, "S closing the map with the list goes back to the page");
+  await page.evaluate(() => scrollTo(0, 0)); await page.waitForTimeout(200);
   await page.click("#youBtn");
   const cover = await page.evaluate(() => { const r = document.getElementById("home").getBoundingClientRect(), st = document.getElementById("story"); return r.top === 0 && r.left === 0 && r.width === innerWidth && r.height === innerHeight && getComputedStyle(st).visibility === "hidden" && getComputedStyle(document.documentElement).overflow === "hidden" && getComputedStyle(document.getElementById("home")).backgroundColor === "rgb(8, 18, 28)"; });
   ok(cover, "F the form covers the whole screen, opaque, without scroll behind");
   await page.fill("#hSalary", "24000"); await page.keyboard.press("Enter"); await page.keyboard.press("Enter"); await page.keyboard.press("Enter"); await page.waitForTimeout(200);
   await page.click("#toMap"); await page.waitForTimeout(700);
-  ok(!(await H()).visible, "H map button leaves the relief");
+  ok(await page.isVisible("#match") && !(await page.evaluate(() => location.href)).includes("24000") && !(await page.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage) + document.cookie)).includes("24000"), "M the form result opens the map with the list; salary not stored");
+  await page.screenshot({ path: out + "/1920-match.png" });
+  await page.evaluate(() => window.dondeCabes.closeMatch()); await page.waitForTimeout(300);
   await page.emulateMedia({ reducedMotion: "reduce" }); await page.goto("about:blank"); await page.goto(url); await page.waitForTimeout(300);
   ok(await hN() === String(R30.affordable_count) && !(await H()).running, "H reduced motion: count and relief at once");
   await page.emulateMedia({ reducedMotion: "no-preference" });

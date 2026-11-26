@@ -26,7 +26,7 @@ Deporte, cultura y parques vienen de la encuesta EIEL 2023 y no cubren todos los
 
 ## Reproducir
 
-Hace falta Python 3 sin paquetes adicionales. El primer paso usa la red: descarga los archivos que no están en el repositorio (cinco CSV, por tamaño o porque contienen datos personales, y los dos de GSAP) y compara su huella SHA-256. Si una fuente ha publicado una versión nueva, avisa de la diferencia.
+Hace falta Python 3 sin paquetes adicionales. El primer paso usa la red: descarga los archivos que no están en el repositorio (datos que no se versionan por tamaño o porque contienen datos personales, y las librerías) y compara su huella SHA-256. Si una fuente ha publicado una versión nueva, avisa de la diferencia.
 
 ```sh
 python3 -I pipeline/fetch_missing.py
@@ -78,15 +78,21 @@ La página pide al IGN las imágenes de las calles cuando se abre un municipio; 
 | [Instalaciones deportivas, EIEL 2023 (IDEM)](https://idem.comunidad.madrid/geoidem/ows?service=WFS&version=2.0.0&request=GetFeature&typeNames=ServiciosPublicos:IDEM_EIEL_INSTAL_DEPORTIVA_23&outputFormat=application/json&srsName=EPSG:25830) | CC BY 4.0 Comunidad de Madrid | Fuente: IDEM, EIEL 2023, CC BY 4.0 Comunidad de Madrid |
 | [Parques, EIEL 2023 (IDEM)](https://idem.comunidad.madrid/geoidem/ows?service=WFS&version=2.0.0&request=GetFeature&typeNames=CubiertaTerrestre:IDEM_EIEL_PARQUE_23&outputFormat=application/json&srsName=EPSG:25830) | CC BY 4.0 Comunidad de Madrid | Fuente: IDEM, EIEL 2023, CC BY 4.0 Comunidad de Madrid |
 | [Centros culturales, EIEL 2023 (IDEM)](https://idem.comunidad.madrid/geoidem/ows?service=WFS&version=2.0.0&request=GetFeature&typeNames=ServiciosPublicos:IDEM_EIEL_CENT_CULTURAL_23&outputFormat=application/json&srsName=EPSG:25830) | CC BY 4.0 Comunidad de Madrid | Fuente: IDEM, EIEL 2023, CC BY 4.0 Comunidad de Madrid |
+| [Áreas caninas (Ayuntamiento de Madrid)](https://datos.madrid.es/dataset/300094-0-areas-caninas) | CC BY 4.0 | Origen de los datos: Ayuntamiento de Madrid, CC BY 4.0. Descargados el 26/11/2026. |
+| [Zonas caninas y veterinarios (OpenStreetMap)](https://www.openstreetmap.org/copyright) | ODbL 1.0 | © OpenStreetMap (ODbL). Datos hasta el 26/11/2026. |
 | [Mapa base de calles, IGN, en línea](https://www.ign.es/wmts/ign-base?SERVICE=WMTS&REQUEST=GetCapabilities) | CC BY 4.0 scne.es | Mapa base: IGN, CC BY 4.0 scne.es |
 
 La definición y la fecha de cada copia están en `demo/data/municipalities.json` y en los archivos `MANIFIESTO.json`.
 
 Los archivos del Consorcio Regional de Transportes de Madrid, y lo que se deriva de ellos en `demo/data/places.json`, se rigen por su [licencia de uso](https://www.crtm.es/licencia-de-uso), que pide atribución, mantener los datos actualizados y compartirlos con las mismas condiciones. Aquí son una copia fechada.
 
+Las capas de zonas caninas y veterinarios de `demo/data/places.json` que proceden de OpenStreetMap se comparten con su licencia, [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/). La lista es incompleta: que un municipio no tenga ninguna no significa que no exista.
+
 La condición de reutilización del archivo del Ministerio ([RD 1495/2011](https://www.boe.es/buscar/act.php?id=BOE-A-2011-17560)) está deducida de su artículo 8.1, porque el conjunto no trae licencia escrita. El Ministerio no participa en este proyecto ni lo apoya.
 
 ## Librerías
+
+[MapLibre GL JS](https://github.com/maplibre/maplibre-gl-js) 5.24.1 (BSD-3-Clause) dibuja el mapa y [Motion](https://github.com/motiondivision/motion) 14.14.0 (MIT) mueve el mapa y la lista. La idea de panel lateral con fichas parte de [OasisMadrid](https://github.com/ariaslombardero/Oasis-Madrid) (Apache-2.0).
 
 [GSAP y ScrollTrigger](https://gsap.com/community/standard-license/) 3.15.1, de Webflow, se usan en las animaciones con su licencia estándar sin coste. No es una licencia de código abierto, así que sus archivos no se incluyen en este repositorio.
 

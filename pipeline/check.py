@@ -38,7 +38,8 @@ NAMES = ("municipalities.json", "boundaries.geojson", "expected.json", "places.j
 PROVINCE = ROOT / "datos/snapshots/2026-11-26-provincia"
 SCHOOL_CODES = {"012", "013", "014", "015", "016", "017", "042", "045", "070", "072", "073", "074"}
 LAYERS = ("health_centres", "pharmacies", "schools", "sports", "cultural", "parks", "bus_stops",
-          "metro_stations", "rail_stations", "light_rail_stops")
+          "metro_stations", "rail_stations", "light_rail_stops", "dog_areas", "vets")
+DOGS = ROOT / "datos/snapshots/2026-11-26-perro"
 CONTOURS = ROOT / "datos/snapshots/2026-11-25-contornos-25830"
 GRID = 10**7
 FILES = {"alquiler-mivau": "VDP001_01.csv", "relieve-ign-200": "relieve-ign-200.tif",
@@ -46,12 +47,14 @@ FILES = {"alquiler-mivau": "VDP001_01.csv", "relieve-ign-200": "relieve-ign-200.
          "oficinas-farmacia": "oficinas_farmacia.csv",
          **{i: f"{i}.geojson" for i in ("crtm-bus-interurbano", "crtm-metro", "crtm-cercanias", "crtm-metro-ligero",
                                         "idem-deporte", "idem-parques", "idem-cultura")}}
+DOG_FILES = {"ayto-areas-caninas": "areas-caninas.csv", "osm-perro": "osm-perro.tsv"}
 LEGAL_ID = r"[A-HJNP-SUVW]\d{7}[0-9A-J]"
 PINNED_FIRST_CASES = [118, 152, 163]
 PINNED_TOTALS = {"health_centres": 429, "pharmacies": 2958, "schools": 1712, "sports": 718, "cultural": 649,
                  "parks": 2083, "bus_stops": 8247, "metro_stations": 243, "rail_stations": 92, "light_rail_stops": 56}
 PINNED_WITHOUT_POINT = {"health_centres": 9, "pharmacies": 5, "schools": 5, "sports": 1, "cultural": 0, "parks": 1,
-                        "bus_stops": 6, "metro_stations": 0, "rail_stations": 1, "light_rail_stops": 0}
+                        "bus_stops": 6, "metro_stations": 0, "rail_stations": 1, "light_rail_stops": 0,
+                        "dog_areas": 0, "vets": 0}
 RENT = "alquiler_medio_mensual_viviendas_arrendadas_valor_catastral_municipios_mas_20000"
 BONO = "spacm_bono_alquiler_joven_2022"
 
@@ -296,7 +299,7 @@ def test_around_matches_each_file():
                                 and f.get("TIPOPARQUE") != "REFUGIOS DE PESCA Y MONTAÑA")
     for code, m in municipalities.items():
         assert tuple(m["around"]) == LAYERS, code
-        for layer in LAYERS:
+        for layer in LAYERS[:-2]:
             figure = m["around"][layer]
             if code not in present.get(layer, names):
                 assert figure is None, (code, layer, figure)
@@ -308,7 +311,7 @@ def test_around_matches_each_file():
     assert sum(m["around"]["bus_stops"]["value"] > 0 for m in municipalities.values()) == 179
     assert sum(m["around"]["metro_stations"]["value"] > 0 for m in municipalities.values()) == 12
     totals = {layer: sum(m["around"][layer]["value"] for m in municipalities.values() if m["around"][layer])
-              for layer in LAYERS}
+              for layer in LAYERS[:-2]}
     assert totals == PINNED_TOTALS, totals
 
 
@@ -318,7 +321,7 @@ def test_places_are_points_in_their_municipality():
     shapes = shapes_in(OUTPUT / "boundaries.geojson")
     total = 0
     for layer, content in places["layers"].items():
-        assert set(content) == {"source", "points"}, layer
+        assert set(content) == {"source", "points"} | ({"other_sources"} if layer == "dog_areas" else set()), layer
         for code, points in content["points"].items():
             figure = municipalities[code]["around"][layer]
             assert figure and 0 < len(points) <= figure["value"], (layer, code)
@@ -411,6 +414,67 @@ def test_personal_data_detector():
         assert personal([bad], holders, phones), bad
     clean = ["CTRA M506 KM 12,300", "CALLE de Alcalá 98", "AV. 8 DE MARZO-C/ 1 DE MAYO", "Centro de salud"]
     assert not personal(clean, holders, phones), personal(clean, holders, phones)
+
+
+def test_dog_snapshot_matches_manifest():
+    files = json.loads((DOGS / "MANIFIESTO.json").read_bytes())["files"]
+    assert {e["id"]: e["file"] for e in files} == DOG_FILES
+    for entry in files:
+        data = (DOGS / entry["file"]).read_bytes()
+        assert (len(data), hashlib.sha256(data).hexdigest()) == (entry["bytes"], entry["sha256"]), entry["file"]
+        assert entry["license"] and entry["url"] and entry["downloaded"], entry["file"]
+
+
+def test_dog_areas_and_vets():
+    """Counted again here in longitude and latitude; build.py places the points in EPSG:25830."""
+    municipalities, places = by_ine(), load("places.json")
+    osm = list(csv.DictReader(io.StringIO((DOGS / "osm-perro.tsv").read_text(encoding="utf-8"), newline=""),
+                              delimiter="\t", quoting=csv.QUOTE_NONE))
+    assert not {k for k in osm[0] if re.search("phone|mail|web|contact|operator|owner", k)}
+    madrid = list(csv.DictReader(io.StringIO((DOGS / "areas-caninas.csv").read_bytes().decode("utf-8-sig"), newline=""),
+                                 delimiter=";"))
+    shapes = shapes_in(OUTPUT / "boundaries.geojson")
+    shapes = {c: s for c, s in shapes.items() if c in municipalities}
+    wanted = {"dog_areas": Counter(), "vets": Counter()}
+    for r in osm:
+        point = float(r["@lon"]), float(r["@lat"])
+        layer = "vets" if r["amenity"] == "veterinary" else "dog_areas"
+        if layer == "dog_areas" and r["access"] in ("private", "no"):
+            continue
+        for code, polygons in shapes.items():
+            if any(sum(contains(ring, point) for ring in polygon) % 2 for polygon in polygons):
+                wanted[layer][code] += 1
+    wanted["dog_areas"]["28079"] = sum(r["ESTADO"] == "OPERATIVO" for r in madrid)
+    assert wanted["dog_areas"]["28079"] == 113
+    for code, m in municipalities.items():
+        for layer in wanted:
+            figure, count = m["around"][layer], wanted[layer][code]
+            if not count:
+                assert figure is None, (code, layer, figure, "absence in OpenStreetMap is not zero")
+                continue
+            source = "ayto-areas-caninas" if (code, layer) == ("28079", "dog_areas") else "osm-perro"
+            assert figure == {"value": count, "year": 2026, "source": source}, (code, layer, figure, count)
+    assert places["layers"]["dog_areas"]["other_sources"] == {"28079": "ayto-areas-caninas"}
+    assert len(places["layers"]["dog_areas"]["points"]["28079"]) == 113
+    city = places["layers"]["dog_areas"]["points"]["28079"]
+    assert all(p[2] is None and p[4] == "Zona canina" for p in city)
+    no_address = sum(not "".join(r[k].strip() for k in ("TIPO_VIA", "NOM_VIA", "NUM_VIA")) for r in madrid)
+    assert sum(p[3] is None for p in city) == no_address == 2, no_address
+    assert {layer: sum(m["around"][layer]["value"] for m in municipalities.values() if m["around"][layer])
+            for layer in wanted} == {"dog_areas": 378, "vets": 355}
+    vets = items("vets")
+    assert all(p[4] == "Veterinario" for p in vets)
+    shown = {p[2] for p in vets}
+    assert not shown & {"Dr. Eugenio Cabezas", "F. Gálvez Sánchez", "Veterinaria Araceli Fernández", "Concha Vizcay"}
+    assert "Centro Veterinario Mirasierra" in shown and None in shown
+    data = load("municipalities.json")
+    for layer in wanted:
+        assert "OpenStreetMap" in data["definitions"][layer] and "no significa que no haya" in data["definitions"][layer]
+    assert "no consta si admiten perros" in data["definitions"]["parks_for_dogs"]
+    source = data["sources"]["osm-perro"]
+    assert "© OpenStreetMap" in source["credit"] and "ODbL" in source["license"]
+    assert source["link"] == "https://www.openstreetmap.org/copyright"
+    assert "CC BY 4.0" in data["sources"]["ayto-areas-caninas"]["credit"]
 
 
 def test_utm_forward_matches_the_inverse():
@@ -540,7 +604,7 @@ def test_removed_rows_become_null_not_zero():
 
 def test_sources_are_declared():
     data = load("municipalities.json")
-    manifest = {e["file"]: e["sha256"] for folder in (SNAPSHOT, CONTOURS, PROVINCE)
+    manifest = {e["file"]: e["sha256"] for folder in (SNAPSHOT, CONTOURS, PROVINCE, DOGS)
                 for e in json.loads((folder / "MANIFIESTO.json").read_bytes())["files"] if e["id"] != "idem-unid-admin"
                 or folder == CONTOURS}
     figures = [m[f] for m in data["municipalities"] for f in
@@ -551,7 +615,7 @@ def test_sources_are_declared():
     used |= {load("terrain.json")["source"]} | {c["source"] for c in load("places.json")["layers"].values()}
     assert used == set(data["sources"]), used ^ set(data["sources"])
     for ident, source in data["sources"].items():
-        file = FILES.get(ident, f"{ident}.{'geojson' if ident == 'idem-unid-admin' else 'csv'}")
+        file = {**FILES, **DOG_FILES}.get(ident, f"{ident}.{'geojson' if ident == 'idem-unid-admin' else 'csv'}")
         assert source["sha256"] == manifest[file], ident
         assert all(source[k] for k in ("title", "url", "downloaded", "license", "credit")), ident
     sources = data["sources"]
@@ -563,7 +627,7 @@ def test_sources_are_declared():
     rent = sources["alquiler-mivau"]
     assert "Origen de los datos: Ministerio de Vivienda y Agenda Urbana" in rent["credit"]
     assert "1495/2011" in rent["license"] and "sin confirmar" in rent["note"] and "euros al mes" in rent["note"]
-    assert set(data["definitions"]) == set(LAYERS) | {"rent", "rent_regional"}
+    assert set(data["definitions"]) == set(LAYERS) | {"rent", "rent_regional", "parks_for_dogs"}
 
 
 def polygons_of(geometry):
@@ -746,7 +810,8 @@ def test_no_personal_data_in_outputs():
     for path in ("2026-11-25-municipal/centros_educativos.csv",
                  "2026-11-25-municipal/spacm_listado_bibliotecas_servicios_lectura.csv",
                  "2026-11-26-provincia/centros_servicios_establecimientos_sanitarios.csv",
-                 "2026-11-26-provincia/oficinas_farmacia.csv", "2026-11-26-provincia/VDP001_01.csv"):
+                 "2026-11-26-provincia/oficinas_farmacia.csv", "2026-11-26-provincia/VDP001_01.csv",
+                 "2026-11-26-perro/osm-perro.tsv"):
         assert f"datos/snapshots/{path}" in ignored, path
 
 
