@@ -118,11 +118,13 @@ def main():
         sys.exit(f"places.json lacks layers {sorted(missing)}")
     payload = {"data": municipalities, "map": shapes, "places": build_places(places, project, codes),
                "without_point": places.get("without_point", {}),
-               "ridges": build_ridges(terrain, boundaries["features"], [m["ine"] for m in municipalities["municipalities"]])}
+               "ridges": build_ridges(terrain, boundaries["features"], [m["ine"] for m in municipalities["municipalities"]]),
+               "ridge_grid": [terrain["origin"][0], terrain["origin"][1], terrain["step"][0] * 3, terrain["step"][1] * 6]}
     blob = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     template = (HERE / "index.template.html").read_text(encoding="utf-8")
     story = HERE / "story"
     subprocess.run([sys.executable, "-I", str(story / "build.py")], check=True)
+    subprocess.run([sys.executable, "-I", str(HERE / "match/build.py")], check=True)
     scripts = [f.read_text(encoding="utf-8") for f in
                (HERE / "vendor/gsap.min.js", HERE / "vendor/ScrollTrigger.min.js", story / "story.js")]
     vendor = [(HERE / f"vendor/{n}").read_text(encoding="utf-8") for n in ("maplibre-gl.js", "motion.js")]

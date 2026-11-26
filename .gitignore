@@ -26,3 +26,15 @@ datos/snapshots/2026-11-26-perro/centros_servicios_establecimientos_sanitarios.c
 datos/snapshots/2026-11-26-perro/oficinas_farmacia.csv
 datos/snapshots/2026-11-26-perro/osm-perro.tsv
 datos/snapshots/2026-11-26-perro/spacm_listado_bibliotecas_servicios_lectura.csv
+datos/snapshots/2026-11-26-culto/VDP001_01.csv
+datos/snapshots/2026-11-26-culto/centros_educativos.csv
+datos/snapshots/2026-11-26-culto/centros_servicios_establecimientos_sanitarios.csv
+datos/snapshots/2026-11-26-culto/oficinas_farmacia.csv
+datos/snapshots/2026-11-26-culto/osm-perro.tsv
+datos/snapshots/2026-11-26-culto/spacm_listado_bibliotecas_servicios_lectura.csv
+datos/snapshots/2026-11-26-extra/VDP001_01.csv
+datos/snapshots/2026-11-26-extra/centros_educativos.csv
+datos/snapshots/2026-11-26-extra/centros_servicios_establecimientos_sanitarios.csv
+datos/snapshots/2026-11-26-extra/oficinas_farmacia.csv
+datos/snapshots/2026-11-26-extra/osm-perro.tsv
+datos/snapshots/2026-11-26-extra/spacm_listado_bibliotecas_servicios_lectura.csv

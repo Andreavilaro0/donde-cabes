@@ -23,8 +23,8 @@
   </div>
   <div class="story-room">
     <h3 id="story-h3">Saber dónde te llega el sueldo</h3>
-    <p class="story-lead">Quien busca casa en la Comunidad de Madrid suele empezar por los precios. Aquí se empieza por el sueldo: escribes lo que ganas, eliges qué parte darías al alquiler y el mapa enciende los municipios donde el alquiler mediano cabe en esa cifra.</p>
-    <p>Al tocar un municipio ves qué hay en él: centros de salud, farmacias, colegios, parques y paradas de transporte. Un municipio sin dato nunca se enciende. Lo que escribes no sale del navegador.</p>
+    <p class="story-lead">Se empieza por el sueldo, no por los precios. Escribes lo que ganas y qué parte darías al alquiler, y el mapa enciende los municipios donde el alquiler mediano cabe en esa cifra.</p>
+    <p>Al tocar uno ves qué tiene: salud, farmacias, colegios, parques, transporte{{pets}}. Sin dato, nunca se enciende. Lo que escribes no sale del navegador.</p>
   </div>
 </article>
 
@@ -33,15 +33,25 @@
   <figure class="story-facade story-facade-grid">
     {{grid}}
     <figcaption>
-      <span class="story-key story-key-fit">Encendida: entra en {{cap30}} € <b>{{fit30}}</b></span>
+      <span class="story-key story-key-fit">Encendida: entra en {{cap30}}&nbsp;€ <b>{{fit30}}</b></span>
       <span class="story-key story-key-off">Persiana bajada: no entra <b>{{off30}}</b></span>
       <span class="story-key story-key-none">Tapiada: sin dato de alquiler <b>{{no_rent}}</b></span>
     </figcaption>
   </figure>
   <div class="story-room">
-    <h3 id="story-h2">{{salary}} € al año, {{cap30}} € para el alquiler</h3>
-    <p class="story-lead">Para empezar sin pedirte nada, el mapa usa el salario medio de quien tiene de {{ages}} años en la Comunidad de Madrid: {{salary}} € brutos en {{salary_year}}. Con el 30 % para el alquiler, el tope es {{cap30}} € al mes, y el alquiler mediano entra en {{fit30}} de los {{with_rent}} municipios con dato.</p>
-    <p>Con el 40 %, el tope sube a {{cap40}} € y entran {{fit40}}. Con dos sueldos así y el 30 %, el tope es {{cap_two}} € y entran los {{fit_two}}. Es una media, no alguien concreto. Cada ventana de esta planta es un municipio, del alquiler más bajo al más alto.</p>
+    <p class="story-kicker">Salario medio de {{ages}} años: {{salary}}&nbsp;€ brutos en {{salary_year}}</p>
+    <h3 id="story-h2">Con {{cap30}}&nbsp;€ al mes, el alquiler mediano entra en</h3>
+    <p class="story-tally"><span class="story-flaps" aria-hidden="true" data-n="{{fit30}}">{{flaps30}}</span><span class="story-sr">{{fit30}}</span> <span class="story-tally-of">de {{with_rent}} municipios con dato</span></p>
+    <table class="story-departures">
+      <caption class="story-sr">Tope de alquiler y municipios que entran según la parte del sueldo</caption>
+      <thead><tr><th scope="col">Parte del sueldo</th><th scope="col">Tope al mes</th><th scope="col">Entran</th></tr></thead>
+      <tbody>
+        <tr class="story-dep-on"><th scope="row">30&nbsp;%</th><td>{{cap30}}&nbsp;€</td><td>{{fit30}}</td></tr>
+        <tr><th scope="row">40&nbsp;%</th><td>{{cap40}}&nbsp;€</td><td>{{fit40}}</td></tr>
+        <tr><th scope="row">Dos sueldos, 30&nbsp;%</th><td>{{cap_two}}&nbsp;€</td><td>{{fit_two}}</td></tr>
+      </tbody>
+    </table>
+    <p>Es una media, no alguien concreto. Cada ventana es un municipio, del alquiler más bajo al más alto: se encienden según bajas.</p>
   </div>
 </article>
 
@@ -49,7 +59,7 @@
   <span class="story-plate" aria-hidden="true">1º</span>
   <div class="story-room story-room-wide">
     <h3 id="story-h1">{{n_sources}} conjuntos de datos, un buzón cada uno</h3>
-    <p class="story-lead">Los publican {{n_publishers}} organismos: {{publishers}}. Cada archivo se descargó una vez y se guardó con su huella SHA-256: las cifras de esta web salen de esas copias.</p>
+    <p class="story-lead">Los publican {{n_publishers}} organismos. Cada archivo se descargó una vez y se guardó con su huella SHA-256: las cifras de esta web salen de esas copias.</p>
     <ol class="story-boxes">
 {{boxes}}
     </ol>
@@ -65,14 +75,14 @@
       <div class="story-board">
         <h3 id="story-h0">Una división y una comparación</h3>
         <p class="story-chalk">tope = sueldo bruto anual ÷ 12 × parte para el alquiler</p>
-        <p class="story-chalk story-chalk-eg">{{salary}} ÷ 12 × 30 % = {{cap30}} €</p>
+        <p class="story-chalk story-chalk-eg">{{salary}} ÷ 12 × 30&nbsp;% = {{cap30}}&nbsp;€</p>
         <p class="story-chalk">entra si alquiler mediano ≤ tope</p>
       </div>
       <div class="story-notes">
         <h4>Lo que no sabemos</h4>
         <ul>
           <li>{{no_rent}} municipios no tienen dato de alquiler. Salen tapiados, nunca encendidos: {{no_rent_names}}.</li>
-          <li>El Ministerio no explica su CSV. No publica la unidad ni qué mide cada columna: leemos euros al mes sin haberlo confirmado. La licencia la deducimos del Real Decreto 1495/2011, porque el archivo no trae ninguna.</li>
+          <li>El archivo del Ministerio no trae diccionario. Leemos su precio como la «cuantía» en euros al mes de la <a href="https://cdn.mivau.gob.es/portal-web-mivau/vivienda/serpavi/2026-03-18_Metodologia_SERPAVI.pdf" target="_blank" rel="noopener noreferrer">metodología SERPAVI</a> (18 de marzo de 2026), porque el número de viviendas de la Comunidad de Madrid en 2023 y 2024 coincide con el del documento; la correspondencia es deducción nuestra. La licencia la deducimos del Real Decreto 1495/2011, porque el archivo no trae ninguna.</li>
           <li>El sueldo es bruto y es una media de todo el tramo de edad. Lo que llega cada mes a la cuenta es menos. El alquiler, en cambio, es una mediana.</li>
           <li>Es el alquiler de 2024 que recoge el Ministerio. Los anuncios de hoy pueden pedir más.</li>
           <li>En {{detached}} municipios solo hay dato de casas unifamiliares, no de pisos.</li>

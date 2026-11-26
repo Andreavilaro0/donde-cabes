@@ -36,6 +36,7 @@ Montar la página con los datos incluidos:
 
 ```sh
 if [ -f demo/story/build.py ]; then python3 -I demo/story/build.py; fi
+if [ -f demo/match/build.py ]; then python3 -I demo/match/build.py; fi
 python3 -I demo/build.py
 ```
 
@@ -86,7 +87,7 @@ La definición y la fecha de cada copia están en `demo/data/municipalities.json
 
 Los archivos del Consorcio Regional de Transportes de Madrid, y lo que se deriva de ellos en `demo/data/places.json`, se rigen por su [licencia de uso](https://www.crtm.es/licencia-de-uso), que pide atribución, mantener los datos actualizados y compartirlos con las mismas condiciones. Aquí son una copia fechada.
 
-Las capas de zonas caninas y veterinarios de `demo/data/places.json` que proceden de OpenStreetMap se comparten con su licencia, [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/). La lista es incompleta: que un municipio no tenga ninguna no significa que no exista.
+Las capas de `demo/data/places.json` que proceden de OpenStreetMap, y las copias de las que salen, se comparten con su licencia, [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/). Son listas incompletas: que un municipio no tenga ningún lugar de una capa no significa que no exista.
 
 La condición de reutilización del archivo del Ministerio ([RD 1495/2011](https://www.boe.es/buscar/act.php?id=BOE-A-2011-17560)) está deducida de su artículo 8.1, porque el conjunto no trae licencia escrita. El Ministerio no participa en este proyecto ni lo apoya.
 

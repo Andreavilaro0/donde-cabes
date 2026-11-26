@@ -121,11 +121,19 @@ def build():
             "private_early": m["private_early_centres"] and m["private_early_centres"]["value"],
             "centre": centre.get(m["ine"]), "bbox": bbox.get(m["ine"]),
             "names": names.get(m["ine"], {}),
+            # located places for the click-to-zoom list: [lon, lat, name, address] per layer
+            "pts": {layer: [r[:4] for r in body["points"].get(m["ine"], [])]
+                    for layer, body in places["layers"].items() if body["points"].get(m["ine"])},
         })
     for layer in OPTIONAL_LAYERS:
         if layer in places["layers"]:
             print("optional layer present:", layer)
 
+    extra_path = DATA / "extra.json"  # optional (DATOS cambio 5): postcodes of Madrid, unemployment, income
+    extra = json.loads(extra_path.read_text()) if extra_path.exists() else {}
+    print("extra.json:", "present" if extra else "absent")
+    for m in munis:
+        m["extra"] = (extra.get("municipalities") or {}).get(m["ine"]) or {}
     payload = {
         "rule": expected["rule"],
         "layers": sorted(places["layers"].keys()),
@@ -133,6 +141,9 @@ def build():
         "sources": {k: {"title": v.get("title"), "credit": v.get("credit"), "license": v.get("license"), "link": v.get("link"),
                         "url": v.get("url"), "note": v.get("note")} for k, v in data["sources"].items()},
         "municipalities": munis,
+        "postcodes": extra.get("madrid_postcodes") or [],
+        "extra_definitions": extra.get("definitions") or {},
+        "extra_sources": {k: {"title": v.get("title"), "credit": v.get("credit"), "link": v.get("link")} for k, v in (extra.get("sources") or {}).items()},
         "outlines": {"type": "FeatureCollection", "features": feats},
     }
     blob = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")

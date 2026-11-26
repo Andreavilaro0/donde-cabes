@@ -56,16 +56,16 @@ boxes = []
 for n, (k, s) in enumerate(src.items(), 1):
     what = "; ".join(FIELD.get(f, f) for f in sorted(use.get(k, []), key=lambda f: list(FIELD).index(f) if f in FIELD else len(FIELD))) or "pendiente"
     note = f'<p class="story-letter-note">{esc(s["note"])}</p>' if s.get("note") else ""
-    boxes.append(f'''<li class="story-box">
-<div class="story-box-front" aria-hidden="true"><span class="story-box-plate">{n}</span><span class="story-box-slot"><span class="story-box-flap"></span></span><span class="story-box-key"></span></div>
-<article class="story-letter" aria-labelledby="story-b{n}">
-<h4 id="story-b{n}">{esc(s["title"])}</h4>
-<p class="story-letter-who">{esc(publisher(k, s))} · {"dato de " + esc(year(k)) if year(k) != "pendiente" else "fecha del dato: pendiente"}</p>
-<dl><div><dt>Qué sacamos</dt><dd>{esc(what)}</dd></div>
-<div><dt>Licencia</dt><dd>{esc(s["license"])}</dd></div>
+    boxes.append(f'''<li><details class="story-box">
+<summary><span class="story-box-front" aria-hidden="true"><span class="story-box-plate">{n}</span><span class="story-box-slot"><span class="story-box-flap"></span></span></span>
+<span class="story-box-title">{esc(s["title"])}</span>
+<span class="story-box-who">{esc(publisher(k, s))} · {"dato de " + esc(year(k)) if year(k) != "pendiente" else "fecha del dato: pendiente"}</span></summary>
+<div class="story-letter">
+<p class="story-letter-what"><b>Qué sacamos:</b> {esc(what)}</p>
+<dl><div><dt>Licencia</dt><dd>{esc(s["license"])}</dd></div>
 <div><dt>Crédito</dt><dd>{esc(s["credit"])}</dd></div></dl>{note}
-<a href="{esc(s["url"])}">Abrir la fuente<span class="story-sr"> de {esc(s["title"])}</span></a>
-</article></li>''')
+<a class="story-src" href="{esc(s["url"])}">Abrir la fuente<span class="story-sr"> de {esc(s["title"])}</span></a>
+</div></details></li>''')
 publishers = sorted({publisher(k, s) for k, s in src.items()})
 
 order = sorted(towns, key=lambda t: (t["rent"] is None, t["rent"]["value"] if t["rent"] else 0, t["name"]))
@@ -85,7 +85,11 @@ rows = -(-len(order) // COLS)
 walls = f'<rect class="story-wall" x="-8" y="-8" width="{COLS * (W + GX) + 4}" height="{rows * (H + GY) + 6}"/>' + "".join(f'<rect class="story-impost" x="-8" y="{r * (H + GY) + H + 8}" width="{COLS * (W + GX) + 4}" height="3"/>' for r in range(rows))
 grid = f'<svg class="story-grid" viewBox="-8 -8 {COLS * (W + GX) + 4} {rows * (H + GY) + 6}" role="img" aria-labelledby="story-grid-t"><title id="story-grid-t">Fachada de {len(towns)} ventanas, una por municipio, ordenadas de alquiler más bajo a más alto. {fit["30"]} encendidas, {len(with_rent) - fit["30"]} apagadas y {len(no_rent)} tapiadas sin dato.</title><defs><pattern id="story-rail" width="5" height="13" patternUnits="userSpaceOnUse"><path d="M0 1H5M2.5 1V13" stroke="#9fb0bd" stroke-width="1.2"/></pattern><pattern id="story-brick" width="10" height="6" patternUnits="userSpaceOnUse"><rect width="10" height="6" fill="#2a3644"/><path d="M0 .5H10M0 3.5H10M3 .5V3.5M8 3.5V6.5" stroke="#4a5a6b" stroke-width="1"/></pattern></defs>{walls}{"".join(wins)}</svg>'
 
+def flaps(n): return "".join(f'<span class="story-flap">{c}</span>' for c in str(n))
+dogs = sum(1 for t in towns if any((t["around"].get(k) or {}).get("value") for k in ("dog_areas", "vets")))
+pets = " y, si vas con perro, áreas caninas y veterinarios" if dogs else ""
 values = {
+    "flaps30": flaps(fit["30"]), "pets": pets,
     "salary": eur(salary), "salary_year": ref["year"], "ages": ref["ages"].replace("-", " a "),
     "cap30": cap(30), "cap40": cap(40), "cap_two": cap(30, 2), "fit30": fit["30"], "fit40": fit["40"], "fit_two": fit["two"],
     "with_rent": len(with_rent), "total": len(towns), "no_rent": len(no_rent), "off30": len(with_rent) - fit["30"],
@@ -103,4 +107,5 @@ page = f'''<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name
 <div id="map" tabindex="-1">Aquí empieza el mapa</div>
 <script src="../vendor/gsap.min.js"></script><script src="../vendor/ScrollTrigger.min.js"></script><script src="story.js"></script></body></html>'''
 (HERE / "prueba.html").write_text(page)
+print("dog data towns", dogs)
 print("story.built.html", len(fragment), "bytes; fits", fit, "no rent", len(no_rent), "sources", len(src), "publishers", len(publishers))
